@@ -1,0 +1,17 @@
+﻿{
+    propertyEditors: [
+    {
+        alias: "Vizioz.AutoGeoCode",
+        name: "Auto Geocode",
+        editor: {
+            view: "~/App_Plugins/AutoGeoCode/views/autogeocode.html",
+        },
+		icon: "icon-map-location"
+  	}],
+    javascript: [
+      "~/App_Plugins/AutoGeoCode/js/autogeocode.controller.js",
+      "~/App_Plugins/AutoGeoCode/js/autogeocode.factory.js"
+    ],
+    css: [
+    ]
+}
