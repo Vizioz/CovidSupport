@@ -1,7 +1,8 @@
 ﻿using Examine;
 using Umbraco.Core.Composing;
+using Umbraco.Core.Models;
 
-namespace CovidSupport.Core.Examine
+namespace CovidSupport.Core.Components.Examine
 {
     public class ResourceExamineComponent : IComponent
     {
@@ -25,6 +26,21 @@ namespace CovidSupport.Core.Examine
 
         public void Terminate()
         {
+        }
+
+        protected internal void AddIndexForContentIfItDoesNotExist(IContent content)
+        {
+            if (!this.IndexForContentExists(content))
+            {
+                var index = _indexCreator.Create(content);
+                _examineManager.AddIndex(index);
+            }
+        }
+
+        private bool IndexForContentExists(IContent content)
+        {
+            return ExamineManager.Instance.TryGetIndex(Constants.Examine.ResourceIndexName + "-" + content.Name,
+                out var index);
         }
     }
 }
