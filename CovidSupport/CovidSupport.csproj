@@ -281,6 +281,9 @@
     <Content Include="App_Plugins\FaLinksPropertyEditor\js\falinks.picker.controller.js" />
     <Content Include="App_Plugins\FaLinksPropertyEditor\js\falinks.prevalues.controller.js" />
     <Content Include="App_Plugins\FaLinksPropertyEditor\js\falinks.propertyeditor.controller.js" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\font-awesome-5-13.css" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-brands-400.svg" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-solid-900.svg" />
     <Content Include="App_Plugins\Our.Umbraco.Matryoshka\content-interceptor.js" />
     <Content Include="App_Plugins\Our.Umbraco.Matryoshka\directives\matryoshka-tabbed-content.directive.js" />
     <Content Include="App_Plugins\Our.Umbraco.Matryoshka\directives\matryoshka-tabbed-content.html" />
@@ -330,6 +333,15 @@
     <Content Include="App_Plugins\FaLinksPropertyEditor\package.manifest" />
     <Content Include="App_Plugins\FaLinksPropertyEditor\icons.json" />
     <Content Include="App_Plugins\AutoGeoCode\package.manifest" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-brands-400.eot" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-brands-400.ttf" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-brands-400.woff" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-brands-400.woff2" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-solid-900.eot" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-solid-900.ttf" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-solid-900.woff" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-solid-900.woff2" />
+    <Content Include="App_Plugins\FontAwesomeIconPack\package.manifest" />
     <None Include="packages.config" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\Partials\Grid\Editors\Textstring.cshtml" />
