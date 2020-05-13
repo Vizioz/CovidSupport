@@ -1,7 +1,7 @@
 ﻿using Umbraco.Core;
 using Umbraco.Core.Composing;
 
-namespace CovidSupport.Core.Examine
+namespace CovidSupport.Core.Components.Examine
 {
     public class ResourceExamineComposer : IUserComposer
     {
