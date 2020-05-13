@@ -236,6 +236,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\ContentEvents\SaveResourceComponent.cs" />
     <Compile Include="Components\ContentEvents\AddIndexComponent.cs" />
     <Compile Include="Constants\Examine.cs" />
     <Compile Include="Controllers\Tree\ThemesTreeController.cs" />

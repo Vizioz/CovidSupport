@@ -1,49 +1,100 @@
 ﻿(function () {
-    'use strict';
+    "use strict";
 
-    function autoGeoCodeController($scope, AutoGeoCodeFactory) {
+    function autoGeoCodeController($scope, $q, AutoGeoCodeFactory) {
 
-        $scope.mapId = "leaflet-map-" + $scope.$id;
+        var leafLetAccessToken = "pk.eyJ1IjoibWlndWVsbG9wZXo2IiwiYSI6ImNrOXd3a3NhZDA5eGkzZ284dXl5ZnI3NXUifQ.HehSLVuVEqpaa8ukk44NwA";
+        var mapStarted = false;
+        var myMap = null;
+        var mapMarkers = [];
 
-        function getLatLon() {
-            var content = $scope.$parent.$parent.$parent.content;
+        $scope.mapId = "leaflet-map-" + $scope.id;
 
-            angular.forEach(content.tabs,
-                function(tab) {
-                    angular.forEach(tab.properties,
-                        function(property) {
-                            if (property.alias === "lat") {
-                                $scope.lat = property.value;
-                            }
-                            if (property.alias === "lon") {
-                                $scope.lon = property.value;
-                            }
-                        });
-                });
-
-            console.log($scope.lat + ", " + $scope.lon);
+        function isMapElementVisible() {
+            return angular.element("#" + $scope.mapId).is(":visible");
         }
 
-        function initMap() {
-            AutoGeoCodeFactory.mapsInitialized().then(function () {
-                
-                var mymap = L.map($scope.mapId).setView([35.929903, -79.026481], 13);
-                
-                L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                    maxZoom: 18,
-                    id: 'mapbox/streets-v11',
-                    tileSize: 512,
-                    zoomOffset: -1,
-                    accessToken: 'pk.eyJ1IjoibWlndWVsbG9wZXo2IiwiYSI6ImNrOXd3a3NhZDA5eGkzZ284dXl5ZnI3NXUifQ.HehSLVuVEqpaa8ukk44NwA'
-                }).addTo(mymap);
-                var marker = L.marker([35.929903, -79.026481]).addTo(mymap);
+        function attemptDrawMap() {
+            if (!mapStarted) {
+                drawMap().then(function () {
+                        mapStarted = true;
+                    },
+                    function (e) {
+                        console.log(e);
+                    });
+            } else {
+                resetMap();
+            }
+        }
+
+        function drawMap() {
+            return $q(function (resolve, reject) {
+                var latLon = $scope.model.value;
+                if (latLon && latLon[0] !== null && latLon[1] !== null) {
+                    try {
+                        myMap = L.map($scope.mapId).setView(latLon, 12);
+                        L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+                            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                            maxZoom: 18,
+                            id: "mapbox/streets-v11",
+                            tileSize: 512,
+                            zoomOffset: -1,
+                            accessToken: leafLetAccessToken
+                        }).addTo(myMap);
+                        var marker = L.marker(latLon).addTo(myMap);
+                        mapMarkers = [marker];
+                        return resolve();
+                    } catch (e) {
+                        return reject(e);
+                    } 
+                }
             });
         }
 
-        initMap();
+        function resetMap() {
+            var latLon = $scope.model.value;
+
+            if (latLon && latLon[0] !== null && latLon[1] !== null) {
+                // clear markers
+                for (var i = 0; i < mapMarkers.length; i++) {
+                    myMap.removeLayer(mapMarkers[i]);
+                }
+
+                // recenter map and add new marker
+                myMap.setView(latLon, 12);
+                var marker = L.marker(latLon).addTo(myMap);
+                mapMarkers = [marker];
+            } 
+        }
+
+        $scope.displayAutoGeocode = function() {
+            var lat = $scope.model.value[0];
+            var lon = $scope.model.value[1];
+            var latDisplay = lat !== null ? lat : "";
+            var lonDisplay = lon !== null ? lon : "";
+
+            return "[" + latDisplay + "," + lonDisplay + "]";
+        };
+
+        AutoGeoCodeFactory.initializeMaps()
+            .then(function () {
+                $scope.$watch(isMapElementVisible, function (newVal) {
+                        if (newVal === true) {
+                            attemptDrawMap();
+                        }
+                    });
+                $scope.$watch("model.value",
+                    function (newVal) {
+                        if (isMapElementVisible()) {
+                            attemptDrawMap();
+                        }
+                    });
+            },
+            function() {
+                console.log("Failed to load map resources.");
+            });
     }
 
-    angular.module('umbraco').controller("AutoGeoCode.Controller", autoGeoCodeController);
+    angular.module("umbraco").controller("AutoGeoCode.Controller", autoGeoCodeController);
 
 })();

@@ -141,9 +141,6 @@
     <Reference Include="NPoco, Version=3.9.4.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\NPoco.3.9.4\lib\net45\NPoco.dll</HintPath>
     </Reference>
-    <Reference Include="Our.Umbraco.GMaps, Version=1.3.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Our.Umbraco.GMaps.1.3.1\lib\net472\Our.Umbraco.GMaps.dll</HintPath>
-    </Reference>
     <Reference Include="Owin, Version=1.0.0.0, Culture=neutral, PublicKeyToken=f0ebd12fd5e55cc5, processorArchitecture=MSIL">
       <HintPath>..\packages\Owin.1.0\lib\net40\Owin.dll</HintPath>
     </Reference>
@@ -284,12 +281,6 @@
     <Content Include="App_Plugins\FaLinksPropertyEditor\js\falinks.picker.controller.js" />
     <Content Include="App_Plugins\FaLinksPropertyEditor\js\falinks.prevalues.controller.js" />
     <Content Include="App_Plugins\FaLinksPropertyEditor\js\falinks.propertyeditor.controller.js" />
-    <Content Include="App_Plugins\Our.Umbraco.GMaps\js\our.umbraco.gmaps.controller.js" />
-    <Content Include="App_Plugins\Our.Umbraco.GMaps\js\our.umbraco.gmaps.factory.js" />
-    <Content Include="App_Plugins\Our.Umbraco.GMaps\js\our.umbraco.gmaps.snazzymaps.controller.js" />
-    <Content Include="App_Plugins\Our.Umbraco.GMaps\js\our.umbraco.gmaps.snazzymaps.factory.js" />
-    <Content Include="App_Plugins\Our.Umbraco.GMaps\views\our.umbraco.gmaps.editor.html" />
-    <Content Include="App_Plugins\Our.Umbraco.GMaps\views\our.umbraco.gmaps.snazzymaps.prevalue.html" />
     <Content Include="App_Plugins\Our.Umbraco.Matryoshka\content-interceptor.js" />
     <Content Include="App_Plugins\Our.Umbraco.Matryoshka\directives\matryoshka-tabbed-content.directive.js" />
     <Content Include="App_Plugins\Our.Umbraco.Matryoshka\directives\matryoshka-tabbed-content.html" />
@@ -339,7 +330,6 @@
     <Content Include="App_Plugins\FaLinksPropertyEditor\package.manifest" />
     <Content Include="App_Plugins\FaLinksPropertyEditor\icons.json" />
     <Content Include="App_Plugins\AutoGeoCode\package.manifest" />
-    <Content Include="App_Plugins\Our.Umbraco.GMaps\package.manifest" />
     <None Include="packages.config" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\Partials\Grid\Editors\Textstring.cshtml" />
@@ -353,7 +343,6 @@
     <None Include="Properties\PublishProfiles\FolderProfile.pubxml" />
     <Content Include="Views\Website.cshtml" />
     <Content Include="Views\ContentPage.cshtml" />
-    <Content Include="Views\Partials\Our.Umbraco.GMaps\MapScripts.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

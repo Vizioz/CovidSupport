@@ -1,3 +1,6 @@
 ﻿<div ng-controller="AutoGeoCode.Controller">
-    <div id="{{mapId}}" style="height: 300px;"></div>
+    <div style="margin-bottom: 20px; font-style: italic;">{{ displayAutoGeocode() }}</div>
+    <div style="height: 300px; width: 100%; background-color: #ddd;">
+        <div id="{{mapId}}" style="height: 300px; width: 100%;" ng-show="model.value && model.value[0] !== null && model.value[1] !== null"></div>
+    </div>
 </div>
