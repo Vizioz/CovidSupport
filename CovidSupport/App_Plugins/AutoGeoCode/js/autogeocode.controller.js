@@ -30,9 +30,9 @@
         function drawMap() {
             return $q(function (resolve, reject) {
                 var latLon = $scope.model.value;
-                if (latLon && latLon[0] !== null && latLon[1] !== null) {
+                if (latLon && latLon[0] !== null && latLon[0] !== undefined && latLon[1] !== null && latLon[1] !== undefined) {
                     try {
-                        myMap = L.map($scope.mapId).setView(latLon, 12);
+                        myMap = L.map($scope.mapId).setView(latLon, 13);
                         L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
                             attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
                             maxZoom: 18,
@@ -54,14 +54,14 @@
         function resetMap() {
             var latLon = $scope.model.value;
 
-            if (latLon && latLon[0] !== null && latLon[1] !== null) {
+            if (latLon && latLon[0] !== null && latLon[0] !== undefined && latLon[1] !== null && latLon[1] !== undefined) {
                 // clear markers
                 for (var i = 0; i < mapMarkers.length; i++) {
                     myMap.removeLayer(mapMarkers[i]);
                 }
 
                 // recenter map and add new marker
-                myMap.setView(latLon, 12);
+                myMap.setView(latLon, 13);
                 var marker = L.marker(latLon).addTo(myMap);
                 mapMarkers = [marker];
             } 
@@ -70,8 +70,8 @@
         $scope.displayAutoGeocode = function() {
             var lat = $scope.model.value[0];
             var lon = $scope.model.value[1];
-            var latDisplay = lat !== null ? lat : "";
-            var lonDisplay = lon !== null ? lon : "";
+            var latDisplay = lat !== null && lat !== undefined ? lat : "";
+            var lonDisplay = lon !== null && lon !== undefined ? lon : "";
 
             return "[" + latDisplay + "," + lonDisplay + "]";
         };
