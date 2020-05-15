@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using CovidSupport.Core.Models;
 using Examine;
@@ -71,10 +72,18 @@ namespace CovidSupport.Core.Components.Examine
 
             using (var cref = this.UmbracoContext.EnsureUmbracoContext())
             {
-                var cache = cref.UmbracoContext.Content;
+                try
+                {
+                    var cache = cref.UmbracoContext.Content;
 
-                resourceNodes = cache.GetByXPath("//website/communityResources").Select(x => new WebsiteResourcesNode
-                    {Id = x.Id, WebsiteId = x.Parent.Id, WebsiteName = x.Parent.Name}).ToList();
+                    resourceNodes = cache.GetByXPath("//website/communityResources").Select(x =>
+                        new WebsiteResourcesNode
+                            {Id = x.Id, WebsiteId = x.Parent.Id, WebsiteName = x.Parent.Name}).ToList();
+                }
+                catch (Exception e)
+                {
+                    resourceNodes = new List<WebsiteResourcesNode>();
+                }
             }
 
             return resourceNodes;
