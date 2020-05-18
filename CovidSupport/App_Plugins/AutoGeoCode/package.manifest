@@ -10,7 +10,8 @@
   	}],
     javascript: [
       "~/App_Plugins/AutoGeoCode/js/autogeocode.controller.js",
-      "~/App_Plugins/AutoGeoCode/js/autogeocode.factory.js"
+      "~/App_Plugins/AutoGeoCode/js/autogeocode.factory.js",
+      "~/App_Plugins/AutoGeoCode/js/autogeocode.interceptor.js"
     ],
     css: [
     ]

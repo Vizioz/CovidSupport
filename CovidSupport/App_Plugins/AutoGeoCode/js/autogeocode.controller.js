@@ -41,7 +41,10 @@
                             zoomOffset: -1,
                             accessToken: leafLetAccessToken
                         }).addTo(myMap);
-                        var marker = L.marker(latLon).addTo(myMap);
+                        var marker = L.marker(latLon, { draggable: true }).addTo(myMap);
+                        marker.on("dragend", function(r) {
+                            // TODO: change saved values
+                        });
                         mapMarkers = [marker];
                         return resolve();
                     } catch (e) {
