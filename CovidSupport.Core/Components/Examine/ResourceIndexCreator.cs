@@ -47,23 +47,19 @@ namespace CovidSupport.Core.Components.Examine
 
         public IIndex Create(IContent content)
         {
-            string websiteName;
+            var resourceNode = this.GetResourceNode(content);
 
-            using (var cref = this.UmbracoContext.EnsureUmbracoContext())
+            if (!this.ResourceIndexExists(resourceNode.WebsiteName))
             {
-                var cache = cref.UmbracoContext.Content;
-                var parent = cache.GetById(content.ParentId);
-                websiteName = parent.Name;
+                return this.CreateWebsiteResourceIndex(resourceNode);
             }
+            
+            throw new Exception("Resource index for " + resourceNode.WebsiteName + " already exists.");
+        }
 
-            var resourceNode = new WebsiteResourcesNode
-            {
-                Id = content.Id,
-                WebsiteId = content.ParentId,
-                WebsiteName = websiteName
-            };
-
-            return this.CreateWebsiteResourceIndex(resourceNode);
+        public virtual IContentValueSetValidator GetPublishedContentValueSetValidator(int parentId)
+        {
+            return new ContentValueSetValidator(true, true, this.PublicAccessService, parentId);
         }
 
         private IEnumerable<WebsiteResourcesNode> GetResourceNodes()
@@ -89,6 +85,33 @@ namespace CovidSupport.Core.Components.Examine
             return resourceNodes;
         }
 
+        private WebsiteResourcesNode GetResourceNode(IContent content)
+        {
+            WebsiteResourcesNode resourceNode;
+
+            using (var cref = this.UmbracoContext.EnsureUmbracoContext())
+            {
+                try
+                {
+                    var cache = cref.UmbracoContext.Content;
+                    var parent = cache.GetById(content.ParentId);
+
+                    resourceNode = new WebsiteResourcesNode
+                    {
+                        Id = content.Id,
+                        WebsiteId = content.ParentId,
+                        WebsiteName = parent.Name
+                    };
+                }
+                catch (Exception e)
+                {
+                    resourceNode = null;
+                }
+            }
+
+            return resourceNode;
+        }
+
         private IIndex CreateWebsiteResourceIndex(WebsiteResourcesNode resourcesNode)
         {
             var index = new UmbracoContentIndex(
@@ -103,9 +126,10 @@ namespace CovidSupport.Core.Components.Examine
             return index;
         }
 
-        public virtual IContentValueSetValidator GetPublishedContentValueSetValidator(int parentId)
+        private bool ResourceIndexExists(string websiteName)
         {
-            return new ContentValueSetValidator(true, true, this.PublicAccessService, parentId);
+            return ExamineManager.Instance.TryGetIndex(Constants.Examine.ResourceIndexName + "-" + websiteName,
+                out var index);
         }
     }
 }

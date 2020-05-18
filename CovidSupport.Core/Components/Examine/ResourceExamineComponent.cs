@@ -1,6 +1,8 @@
-﻿using Examine;
+﻿using System;
+using Examine;
 using Umbraco.Core.Composing;
 using Umbraco.Core.Models;
+using Umbraco.Web;
 
 namespace CovidSupport.Core.Components.Examine
 {
@@ -10,10 +12,13 @@ namespace CovidSupport.Core.Components.Examine
 
         private readonly ResourceIndexCreator _indexCreator;
 
-        public ResourceExamineComponent(IExamineManager examineManager, ResourceIndexCreator indexCreator)
+        protected IUmbracoContextFactory UmbracoContext { get; }
+
+        public ResourceExamineComponent(IExamineManager examineManager, ResourceIndexCreator indexCreator, IUmbracoContextFactory context)
         {
             _examineManager = examineManager;
             _indexCreator = indexCreator;
+            this.UmbracoContext = context ?? throw new System.ArgumentNullException(nameof(context));
         }
 
         public void Initialize()
@@ -30,10 +35,14 @@ namespace CovidSupport.Core.Components.Examine
 
         protected internal void AddIndexForContentIfItDoesNotExist(IContent content)
         {
-            if (!this.IndexForContentExists(content))
+            try
             {
                 var index = _indexCreator.Create(content);
                 _examineManager.AddIndex(index);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
             }
         }
 
