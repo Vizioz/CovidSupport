@@ -1,0 +1,18 @@
+﻿{
+  "css": [
+    "~/App_Plugins/CsvImport/csvimport.min.css"
+  ],
+  "javascript": [
+    "~/App_Plugins/CsvImport/lib/papaparse.min.js",
+    "~/App_Plugins/CsvImport/csvimport.resources.js",
+    "~/App_Plugins/CsvImport/csvimport.controllers.js"
+  ],
+
+  "dashboards": [
+    {
+      "alias": "csvImportDashboard",
+      "view": "/App_Plugins/CsvImport/csvimport.html",
+      "sections": [ "settings" ]
+    }
+  ]
+}
