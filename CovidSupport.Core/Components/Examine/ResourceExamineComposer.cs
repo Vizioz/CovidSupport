@@ -7,8 +7,8 @@ namespace CovidSupport.Core.Components.Examine
     {
         public void Compose(Composition composition)
         {
-            composition.Register(typeof(ResourceIndexCreator));
             composition.Components().Append<ResourceExamineComponent>();
+            composition.RegisterUnique<ResourceIndexCreator>();
         }
     }
 }

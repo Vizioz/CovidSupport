@@ -23,13 +23,16 @@ namespace CovidSupport.Core.Components.Examine
 
         protected IUmbracoContextFactory UmbracoContext { get; }
 
+        protected IContentTypeService ContentTypeService { get; }
+
         public ResourceIndexCreator(IProfilingLogger profilingLogger, ILocalizationService languageService,
-            IPublicAccessService publicAccessService, IUmbracoContextFactory context)
+            IPublicAccessService publicAccessService, IUmbracoContextFactory context, IContentTypeService contentTypeService)
         {
             this.ProfilingLogger = profilingLogger ?? throw new System.ArgumentNullException(nameof(profilingLogger));
             this.LanguageService = languageService ?? throw new System.ArgumentNullException(nameof(languageService));
             this.PublicAccessService = publicAccessService ?? throw new System.ArgumentNullException(nameof(publicAccessService));
             this.UmbracoContext = context ?? throw new System.ArgumentNullException(nameof(context));
+            this.ContentTypeService = contentTypeService ?? throw new System.ArgumentNullException(nameof(contentTypeService));
         }
 
         public override IEnumerable<IIndex> Create()
@@ -59,7 +62,17 @@ namespace CovidSupport.Core.Components.Examine
 
         public virtual IContentValueSetValidator GetPublishedContentValueSetValidator(int parentId)
         {
-            return new ContentValueSetValidator(true, true, this.PublicAccessService, parentId);
+            IEnumerable<string> includeItems = null;
+
+            var resourcesContainer = this.ContentTypeService.GetContainers("Resources", 1).FirstOrDefault();
+
+            if (resourcesContainer != null)
+            {
+                includeItems = this.ContentTypeService.GetAll().Where(x => x.ParentId == resourcesContainer.Id)
+                    .Select(x => x.Alias);
+            }
+
+            return new ContentValueSetValidator(true, true, this.PublicAccessService, parentId, includeItems);
         }
 
         private IEnumerable<WebsiteResourcesNode> GetResourceNodes()
@@ -114,14 +127,20 @@ namespace CovidSupport.Core.Components.Examine
 
         private IIndex CreateWebsiteResourceIndex(WebsiteResourcesNode resourcesNode)
         {
+            var fields = new FieldDefinitionCollection();
+            fields.AddOrUpdate(new FieldDefinition("lat", FieldDefinitionTypes.Double));
+            fields.AddOrUpdate(new FieldDefinition("lon", FieldDefinitionTypes.Double));
+            
             var index = new UmbracoContentIndex(
                 Constants.Examine.ResourceIndexName + "-" + resourcesNode.WebsiteName,
                 this.CreateFileSystemLuceneDirectory(Constants.Examine.ResourceDirectory + "-" + resourcesNode.WebsiteName),
-                new FieldDefinitionCollection(),
+                fields,
                 new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30),
                 this.ProfilingLogger,
                 this.LanguageService,
                 this.GetPublishedContentValueSetValidator(resourcesNode.Id));
+
+            
 
             return index;
         }
