@@ -24,6 +24,8 @@ namespace CovidSupport.Api.Models
 
         public string Zip { get; set; }
 
+        public string Region { get; set; }
+
         public double? Lat { get; set; }
 
         public double? Lon { get; set; }

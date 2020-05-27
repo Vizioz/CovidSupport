@@ -7,10 +7,7 @@ using System.Web.Http;
 using CovidSupport.Api.Models;
 using Examine;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using Umbraco.Core;
 using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Examine;
 using Umbraco.Web;
 
 namespace CovidSupport.Api.Controllers
@@ -22,7 +19,7 @@ namespace CovidSupport.Api.Controllers
         {
             if (this.Website == null)
             {
-                return this.Request.CreateResponse(HttpStatusCode.BadGateway, "Website not found for the address " + this.WebsiteUrl, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
             }
 
             try
@@ -44,6 +41,11 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage GetAll()
         {
+            if (this.Website == null)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
+            }
+
             try
             {
                 var results = this.Searcher.CreateQuery("content").All().Execute();
@@ -61,6 +63,11 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage GetByCategory(string id)
         {
+            if (this.Website == null)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
+            }
+
             try
             {
                 IEnumerable<ResourceListItem> items = new List<ResourceListItem>();
@@ -71,6 +78,10 @@ namespace CovidSupport.Api.Controllers
                 {
                     var results = this.Index.GetSearcher().CreateQuery("content").Field("parentID", category.Id.ToString()).Execute();
                     items = results.Select(this.BuildResourceListItem);
+                }
+                else
+                {
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Category not found.");
                 }
                 
                 return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
@@ -84,13 +95,25 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage Get(string id)
         {
+            if (this.Website == null)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
+            }
+
             try
             {
                 var result = this.Index.GetSearcher().CreateQuery("content").Id(id).Execute(1).FirstOrDefault();
 
-                var item = this.BuildResourceListItem(result);
+                if (result != null)
+                {
+                    var item = this.BuildResourceListItem(result);
 
-                return this.Request.CreateResponse(HttpStatusCode.Accepted, item, this.FormatterConfiguration);
+                    return this.Request.CreateResponse(HttpStatusCode.Accepted, item, this.FormatterConfiguration);
+                }
+                else
+                {
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource not found.");
+                }
             }
             catch (Exception e)
             {
@@ -117,9 +140,9 @@ namespace CovidSupport.Api.Controllers
                 {
                     findCategory = category;
                 }
-                else if (category.SubCategories.Any())
+                else if (category.Subcategories.Any())
                 {
-                    findCategory = this.FindInCategoryTree(category.SubCategories, code);
+                    findCategory = this.FindInCategoryTree(category.Subcategories, code);
                 }
 
                 if (findCategory != null)
@@ -144,12 +167,12 @@ namespace CovidSupport.Api.Controllers
             {
                 Id = content.Id,
                 Name = content.Name,
-                Code = content.Name
+                Code = content.ContentType.Alias
             };
 
             if (content.ContentType.Alias == "resourceCategory")
             {
-                category.SubCategories = content.Children.Select(this.BuildCategory);
+                category.Subcategories = content.Children.Select(this.BuildCategory);
             }
 
             return category;
@@ -165,6 +188,7 @@ namespace CovidSupport.Api.Controllers
             var stateList = searchResult.GetValues("state").FirstOrDefault();
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[]{};
             var zip = searchResult.GetValues("zip").FirstOrDefault();
+            var region = searchResult.GetValues("region").FirstOrDefault();
             var map = searchResult.GetValues("map").FirstOrDefault();
             var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
 
@@ -179,6 +203,7 @@ namespace CovidSupport.Api.Controllers
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
+                Region = region,
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options

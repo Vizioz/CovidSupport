@@ -7,7 +7,7 @@ namespace CovidSupport.Api.Models
     {
         public ResourceCategory()
         {
-            this.SubCategories = new List<ResourceCategory>();
+            this.Subcategories = new List<ResourceCategory>();
         }
 
         public int Id { get; set; }
@@ -16,6 +16,6 @@ namespace CovidSupport.Api.Models
 
         public string Code { get; set; }
 
-        public IEnumerable<ResourceCategory> SubCategories { get; set; }
+        public IEnumerable<ResourceCategory> Subcategories { get; set; }
     }
 }
