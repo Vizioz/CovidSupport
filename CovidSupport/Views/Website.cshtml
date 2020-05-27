@@ -31,7 +31,8 @@
         zoomOffset: -1,
         accessToken: 'pk.eyJ1IjoibWlndWVsbG9wZXo2IiwiYSI6ImNrOXd3a3NhZDA5eGkzZ284dXl5ZnI3NXUifQ.HehSLVuVEqpaa8ukk44NwA'
     }).addTo(mymap);
-    var marker = L.marker([35.929903, -79.026481]).addTo(mymap);
+    var marker = L.marker([35.929903, -79.026481], { draggable: true, autoPan: true }).addTo(mymap);
+    marker.on("dragend", function(r) { console.log("drag end"); console.log(r.target._latlng); });
 </script>
 </body>
 </html>
