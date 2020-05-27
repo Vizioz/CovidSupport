@@ -22,7 +22,7 @@ namespace CovidSupport.Api.Controllers
         {
             if (this.Website == null)
             {
-                return this.Request.CreateResponse(HttpStatusCode.BadGateway, "Website not found.", this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.BadGateway, "Website not found for the address " + this.WebsiteUrl, this.FormatterConfiguration);
             }
 
             try

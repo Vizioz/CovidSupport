@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Web.Http;
 using Examine;
 using Newtonsoft.Json.Converters;
@@ -30,11 +31,11 @@ namespace CovidSupport.Api.Controllers
 
         private void SetWebsiteProvider()
         {
-            var allDomains = this.Services.DomainService.GetAll(true);
-
-
             var host = this.ApplicationUrl.Host.Trim('/');
-            var domain = this.Services.DomainService.GetAll(true).FirstOrDefault(d => d.DomainName.Trim('/') == host);
+            this.WebsiteUrl = host;
+
+            var domain = this.Services.DomainService.GetAll(true)
+                .FirstOrDefault(x => string.Equals(this.TrimDomainName(x.DomainName), host, StringComparison.InvariantCultureIgnoreCase));
 
             if (domain != null)
             {
@@ -44,7 +45,6 @@ namespace CovidSupport.Api.Controllers
                 if (website != null)
                 {
                     this.Website = website;
-                    this.WebsiteUrl = host;
                     this.ResourcesIndexName = "CommunityResourceIndex-" + website.Name;
 
                     if (ExamineManager.Instance.TryGetIndex(this.ResourcesIndexName, out var index))
@@ -62,6 +62,27 @@ namespace CovidSupport.Api.Controllers
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
             config.Formatters.JsonFormatter.UseDataContractJsonSerializer = false;
             this.FormatterConfiguration = config;
+        }
+
+        private string TrimDomainName(string domain)
+        {
+            var https = "https://";
+            var indexHttps = domain.IndexOf(https, StringComparison.OrdinalIgnoreCase);
+
+            if (indexHttps == 0)
+            {
+                domain = domain.Remove(indexHttps, https.Length);
+            }
+
+            var http = "http://";
+            var indexHttp = domain.IndexOf(http, StringComparison.OrdinalIgnoreCase);
+
+            if (indexHttp == 0)
+            {
+                domain = domain.Remove(indexHttp, http.Length);
+            }
+
+            return domain.Trim('/');
         }
     }
 }
