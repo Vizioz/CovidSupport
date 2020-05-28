@@ -38,11 +38,11 @@ namespace CovidSupport.Core.Components.Examine
         public override IEnumerable<IIndex> Create()
         {
             var indexes = new List<IIndex>();
-            var resourcesNodes = this.GetResourceNodes();
+            var siteNodes = this.GetSiteNodes();
 
-            foreach (var resourcesNode in resourcesNodes)
+            foreach (var site in siteNodes)
             {
-                indexes.Add(this.CreateWebsiteResourceIndex(resourcesNode));
+                indexes.Add(this.CreateWebsiteResourceIndex(site));
             }
 
             return indexes;
@@ -50,17 +50,17 @@ namespace CovidSupport.Core.Components.Examine
 
         public IIndex Create(IContent content)
         {
-            var resourceNode = this.GetResourceNode(content);
+            var siteNode = this.GetSiteNode(content);
 
-            if (!this.ResourceIndexExists(resourceNode.WebsiteName))
+            if (!this.ResourceIndexExists(siteNode.WebsiteName))
             {
-                return this.CreateWebsiteResourceIndex(resourceNode);
+                return this.CreateWebsiteResourceIndex(siteNode);
             }
             
-            throw new Exception("Resource index for " + resourceNode.WebsiteName + " already exists.");
+            throw new Exception("Resource index for " + siteNode.WebsiteName + " already exists.");
         }
 
-        public virtual IContentValueSetValidator GetPublishedContentValueSetValidator(int parentId)
+        public virtual IContentValueSetValidator GetPublishedContentValueSetValidator(int siteId)
         {
             IEnumerable<string> includeItems = null;
 
@@ -72,12 +72,12 @@ namespace CovidSupport.Core.Components.Examine
                     .Select(x => x.Alias);
             }
 
-            return new ContentValueSetValidator(true, true, this.PublicAccessService, parentId, includeItems);
+            return new ContentValueSetValidator(true, true, this.PublicAccessService, siteId, includeItems);
         }
 
-        private IEnumerable<WebsiteResourcesNode> GetResourceNodes()
+        private IEnumerable<WebsiteNode> GetSiteNodes()
         {
-            IEnumerable<WebsiteResourcesNode> resourceNodes;
+            var siteNodes = new List<WebsiteNode>();
 
             using (var cref = this.UmbracoContext.EnsureUmbracoContext())
             {
@@ -85,60 +85,51 @@ namespace CovidSupport.Core.Components.Examine
                 {
                     var cache = cref.UmbracoContext.Content;
 
-                    resourceNodes = cache.GetByXPath("//website/communityResources").Select(x =>
-                        new WebsiteResourcesNode
-                            {Id = x.Id, WebsiteId = x.Parent.Id, WebsiteName = x.Parent.Name}).ToList();
-                }
-                catch (Exception e)
-                {
-                    resourceNodes = new List<WebsiteResourcesNode>();
-                }
-            }
+                    var sites = cache.GetByXPath("//website");
 
-            return resourceNodes;
-        }
-
-        private WebsiteResourcesNode GetResourceNode(IContent content)
-        {
-            WebsiteResourcesNode resourceNode;
-
-            using (var cref = this.UmbracoContext.EnsureUmbracoContext())
-            {
-                try
-                {
-                    var cache = cref.UmbracoContext.Content;
-                    var parent = cache.GetById(content.ParentId);
-
-                    resourceNode = new WebsiteResourcesNode
+                    foreach (var site in sites)
                     {
-                        Id = content.Id,
-                        WebsiteId = content.ParentId,
-                        WebsiteName = parent.Name
-                    };
+                        var siteNode = new WebsiteNode
+                        {
+                            WebsiteId = site.Id, 
+                            WebsiteName = site.Name
+                        };
+
+                        siteNodes.Add(siteNode);
+                    }
                 }
                 catch (Exception e)
                 {
-                    resourceNode = null;
+                    siteNodes = new List<WebsiteNode>();
                 }
             }
 
-            return resourceNode;
+            return siteNodes;
         }
 
-        private IIndex CreateWebsiteResourceIndex(WebsiteResourcesNode resourcesNode)
+        private WebsiteNode GetSiteNode(IContent content)
+        {
+            return new WebsiteNode
+            {
+                WebsiteId = content.Id,
+                WebsiteName = content.Name
+            };
+        }
+
+        private IIndex CreateWebsiteResourceIndex(WebsiteNode site)
         {
             var fields = new FieldDefinitionCollection();
             fields.AddOrUpdate(new FieldDefinition("lat", FieldDefinitionTypes.Double));
             fields.AddOrUpdate(new FieldDefinition("lon", FieldDefinitionTypes.Double));
             
             var index = new UmbracoContentIndex(
-                Constants.Examine.ResourceIndexName + "-" + resourcesNode.WebsiteName,
-                this.CreateFileSystemLuceneDirectory(Constants.Examine.ResourceDirectory + "-" + resourcesNode.WebsiteName),
+                Constants.Examine.ResourceIndexName + "-" + site.WebsiteName,
+                this.CreateFileSystemLuceneDirectory(Constants.Examine.ResourceDirectory + "-" + site.WebsiteName),
                 fields,
                 new StandardAnalyzer(Lucene.Net.Util.Version.LUCENE_30),
                 this.ProfilingLogger,
                 this.LanguageService,
-                this.GetPublishedContentValueSetValidator(resourcesNode.Id));
+                this.GetPublishedContentValueSetValidator(site.WebsiteId));
 
             
 
