@@ -21,20 +21,20 @@ namespace CovidSupport.Core.Components.ContentEvents
 
         public void Initialize()
         {
-            ContentService.Published += this.ContentService_Published;
+            ContentService.Saved += this.ContentService_Saved;
         }
 
         public void Terminate()
         {
         }
 
-        private void ContentService_Published(Umbraco.Core.Services.IContentService sender, Umbraco.Core.Events.ContentPublishedEventArgs e)
+        private void ContentService_Saved(Umbraco.Core.Services.IContentService sender, Umbraco.Core.Events.ContentSavedEventArgs e)
         {
-            foreach (var publishedItem in e.PublishedEntities)
+            foreach (var publishedItem in e.SavedEntities)
             {
-                if (publishedItem.ContentType.Alias == "communityResources")
+                if (publishedItem.ContentType.Alias == "website")
                 {
-                    ExamineComponent.AddIndexForContentIfItDoesNotExist(publishedItem);
+                    ExamineComponent.AttemptAddIndexForContent(publishedItem);
                 }
             }
         }

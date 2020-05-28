@@ -33,7 +33,7 @@ namespace CovidSupport.Core.Components.Examine
         {
         }
 
-        protected internal void AddIndexForContentIfItDoesNotExist(IContent content)
+        protected internal void AttemptAddIndexForContent(IContent content)
         {
             try
             {
@@ -44,12 +44,6 @@ namespace CovidSupport.Core.Components.Examine
             {
                 Console.WriteLine(e);
             }
-        }
-
-        private bool IndexForContentExists(IContent content)
-        {
-            return ExamineManager.Instance.TryGetIndex(Constants.Examine.ResourceIndexName + "-" + content.Name,
-                out var index);
         }
     }
 }

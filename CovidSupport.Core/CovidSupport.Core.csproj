@@ -242,7 +242,7 @@
     <Compile Include="Components\Examine\ResourceExamineComponent.cs" />
     <Compile Include="Components\Examine\ResourceExamineComposer.cs" />
     <Compile Include="Components\Examine\ResourceIndexCreator.cs" />
-    <Compile Include="Models\WebsiteResourcesNode.cs" />
+    <Compile Include="Models\WebsiteNode.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
