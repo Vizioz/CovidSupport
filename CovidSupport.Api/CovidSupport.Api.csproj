@@ -239,6 +239,8 @@
     <Compile Include="Components\ApiRouteHandlerComponent.cs" />
     <Compile Include="Controllers\BaseApiController.cs" />
     <Compile Include="Controllers\ResourceController.cs" />
+    <Compile Include="Interfaces\IResourceItem.cs" />
+    <Compile Include="Models\Resource.cs" />
     <Compile Include="Models\MapInfo.cs" />
     <Compile Include="Models\ResourceCategory.cs" />
     <Compile Include="Models\ResourceListItem.cs" />

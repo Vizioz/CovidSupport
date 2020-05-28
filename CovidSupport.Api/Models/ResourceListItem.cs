@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CovidSupport.Api.Interfaces;
 
 namespace CovidSupport.Api.Models
 {
-    public class ResourceListItem
+    public class ResourceListItem : IResourceItem
     {
         public ResourceListItem()
         {

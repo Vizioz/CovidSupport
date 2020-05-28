@@ -106,7 +106,7 @@ namespace CovidSupport.Api.Controllers
 
                 if (result != null)
                 {
-                    var item = this.BuildResourceListItem(result);
+                    var item = this.BuildResourceItem(result);
 
                     return this.Request.CreateResponse(HttpStatusCode.Accepted, item, this.FormatterConfiguration);
                 }
@@ -207,6 +207,93 @@ namespace CovidSupport.Api.Controllers
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options
+            };
+        }
+
+        private Resource BuildResourceItem(ISearchResult searchResult)
+        {
+            int.TryParse(searchResult.Id, out int id);
+            var providerName = searchResult.GetValues("providerName").FirstOrDefault();
+            var description = searchResult.GetValues("cuisine").FirstOrDefault();
+            var address = searchResult.GetValues("address").FirstOrDefault();
+            var city = searchResult.GetValues("city").FirstOrDefault();
+            var stateList = searchResult.GetValues("state").FirstOrDefault();
+            var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
+            var zip = searchResult.GetValues("zip").FirstOrDefault();
+            var region = searchResult.GetValues("region").FirstOrDefault();
+            var map = searchResult.GetValues("map").FirstOrDefault();
+            var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
+            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
+
+            var providerAddLoc = searchResult.GetValues("providerAddLoc").FirstOrDefault();
+            var free = searchResult.GetValues("map").FirstOrDefault() == "1";
+
+            var monday = searchResult.GetValues("monday").FirstOrDefault();
+            var tuesday = searchResult.GetValues("tuesday").FirstOrDefault();
+            var wednesday = searchResult.GetValues("wednesday").FirstOrDefault();
+            var thursday = searchResult.GetValues("thursday").FirstOrDefault();
+            var friday = searchResult.GetValues("friday").FirstOrDefault();
+            var saturday = searchResult.GetValues("saturday").FirstOrDefault();
+            var sunday = searchResult.GetValues("sunday").FirstOrDefault();
+            var spMonday = searchResult.GetValues("spMonday").FirstOrDefault();
+            var spTuesday = searchResult.GetValues("spTuesday").FirstOrDefault();
+            var spWednesday = searchResult.GetValues("spWednesday").FirstOrDefault();
+            var spThursday = searchResult.GetValues("spThursday").FirstOrDefault();
+            var spFriday = searchResult.GetValues("spFriday").FirstOrDefault();
+            var spSaturday = searchResult.GetValues("spSaturday").FirstOrDefault();
+            var spSunday = searchResult.GetValues("spSunday").FirstOrDefault();
+
+            var contact = searchResult.GetValues("contact").FirstOrDefault();
+            var contactSpanish = searchResult.GetValues("contactSpanish").FirstOrDefault();
+            var email = searchResult.GetValues("email").FirstOrDefault();
+            var webLink = searchResult.GetValues("webLink").FirstOrDefault();
+            var twitter = searchResult.GetValues("twitter").FirstOrDefault();
+            var instagram = searchResult.GetValues("instagram").FirstOrDefault();
+            var facebook = searchResult.GetValues("facebook").FirstOrDefault();
+            
+            var instructions = searchResult.GetValues("instructions").FirstOrDefault();
+            var offers = searchResult.GetValues("offers").FirstOrDefault();
+            var notes = searchResult.GetValues("notes").FirstOrDefault();
+
+            return new Resource
+            {
+                Id = id,
+                ProviderName = providerName,
+                Description = description,
+                Address = address,
+                City = city,
+                State = state.Length > 0 ? state[0] : null,
+                Zip = zip,
+                Region = region,
+                Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
+                Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
+                Options = options,
+                ProviderAddLoc = providerAddLoc,
+                Free = free,
+                Monday = monday,
+                Tuesday = tuesday,
+                Wednesday = wednesday,
+                Thursday = thursday,
+                Friday = friday,
+                Saturday = saturday,
+                Sunday = sunday,
+                SpMonday = spMonday,
+                SpTuesday = spTuesday,
+                SpWednesday = spWednesday,
+                SpThursday = spThursday,
+                SpFriday = spFriday,
+                SpSaturday = spSaturday,
+                SpSunday = spSunday,
+                Contact = contact,
+                ContactSpanish = contactSpanish,
+                Email = email,
+                WebLink = webLink,
+                Twitter = twitter,
+                Instagram = instagram,
+                Facebook = facebook,
+                Instructions = instructions,
+                Offers = offers,
+                Notes = notes
             };
         }
     }
