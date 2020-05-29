@@ -240,11 +240,13 @@
     <Compile Include="Controllers\BaseApiController.cs" />
     <Compile Include="Controllers\ResourceController.cs" />
     <Compile Include="Interfaces\IResourceItem.cs" />
+    <Compile Include="Models\LanguagePhone.cs" />
     <Compile Include="Models\Resource.cs" />
     <Compile Include="Models\MapInfo.cs" />
     <Compile Include="Models\ResourceCategory.cs" />
     <Compile Include="Models\ResourceListItem.cs" />
     <Compile Include="Models\ResourceSettings.cs" />
+    <Compile Include="Models\StartEndTime.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

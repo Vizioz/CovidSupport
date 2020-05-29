@@ -6,16 +6,20 @@ namespace CovidSupport.Api.Models
     {
         public ResourceListItem()
         {
-            this.Options = new string[] { };
+            this.ServiceRegions = new string[] { };
         }
 
         public int Id { get; set; }
 
         public string ProviderName { get; set; }
 
-        public string Description { get; set; }
+        public string ServiceName { get; set; }
 
-        public string Address { get; set; }
+        public string ShortDescription { get; set; }
+
+        public string[] ServiceRegions { get; set; }
+
+        public string StreetAddress { get; set; }
 
         public string City { get; set; }
 
@@ -23,12 +27,10 @@ namespace CovidSupport.Api.Models
 
         public string Zip { get; set; }
 
-        public string Region { get; set; }
+        public string[] Tags { get; set; }
 
         public double? Lat { get; set; }
 
         public double? Lon { get; set; }
-
-        public string[] Options { get; set; }
     }
 }
