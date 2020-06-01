@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
 using Examine;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
+using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web.WebApi;
 
@@ -11,8 +13,12 @@ namespace CovidSupport.Api.Controllers
 {
     public abstract class BaseApiController : UmbracoApiController
     {
+        private const string DefaultCulture = "en-us";
+
         protected IPublishedContent Website { get; private set; }
-        
+
+        protected IEnumerable<IDomain> WebsiteDomains { get; private set; }
+
         protected string WebsiteUrl { get; private set; }
 
         protected string ResourcesIndexName { get; private set; }
@@ -29,11 +35,26 @@ namespace CovidSupport.Api.Controllers
         
         protected ISearcher Searcher => this.Index.GetSearcher();
 
+        protected string GetCultureName(string language)
+        {
+            var host = this.Request.RequestUri.Host.Trim('/');
+
+            if (!string.IsNullOrEmpty(language))
+            {
+                host += "/" + language;
+            }
+
+            var domain = this.WebsiteDomains.FirstOrDefault(x =>
+                string.Equals(this.TrimDomainName(x.DomainName), host, StringComparison.InvariantCultureIgnoreCase));
+
+            return domain?.LanguageIsoCode.ToLowerInvariant() ?? DefaultCulture;
+        }
+
         private void SetWebsiteProvider()
         {
             var host = this.ApplicationUrl.Host.Trim('/');
             this.WebsiteUrl = host;
-
+            
             var domain = this.Services.DomainService.GetAll(true)
                 .FirstOrDefault(x => string.Equals(this.TrimDomainName(x.DomainName), host, StringComparison.InvariantCultureIgnoreCase));
 
@@ -46,6 +67,7 @@ namespace CovidSupport.Api.Controllers
                 {
                     this.Website = website;
                     this.ResourcesIndexName = "CommunityResourceIndex-" + website.Name;
+                    this.WebsiteDomains = this.Services.DomainService.GetAssignedDomains(websiteId, true);
 
                     if (ExamineManager.Instance.TryGetIndex(this.ResourcesIndexName, out var index))
                     {

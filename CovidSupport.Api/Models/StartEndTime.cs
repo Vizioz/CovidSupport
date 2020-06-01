@@ -4,9 +4,9 @@ namespace CovidSupport.Api.Models
 {
     public class StartEndTime
     {
-        public TimeSpan? StartTime { get; set; }
+        public DateTime? StartTime { get; set; }
 
-        public TimeSpan? EndTime { get; set; }
+        public DateTime? EndTime { get; set; }
 
         public string StartTimeString => this.StartTime?.ToString("h:mm tt");
 

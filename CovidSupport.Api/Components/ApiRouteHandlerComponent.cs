@@ -16,7 +16,10 @@ namespace CovidSupport.Api.Components
         public void Initialize()
         {
             RouteTable.Routes.MapHttpRoute("CovidSupportApi", "api/v1/{controller}/{action}/{id}",
-                new {id = UrlParameter.Optional}, new {controller = "Resource"});
+                new { id = UrlParameter.Optional }, new { controller = "Resource" });
+
+            RouteTable.Routes.MapHttpRoute("CovidSupportApiMultilingual", "{language}/api/v1/{controller}/{action}/{id}",
+                new {id = UrlParameter.Optional, language = UrlParameter.Optional}, new {controller = "Resource"});
         }
 
         public void Terminate()

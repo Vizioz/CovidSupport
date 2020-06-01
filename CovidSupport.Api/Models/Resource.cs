@@ -10,6 +10,7 @@ namespace CovidSupport.Api.Models
             this.ServiceRegions = new string[] { };
             this.LanguagePhones = new List<LanguagePhone>();
             this.Tags = new string[] { };
+            this.LanguagesSupported = new string[] { };
         }
 
         public int Id { get; set; }
@@ -102,6 +103,8 @@ namespace CovidSupport.Api.Models
 
         public bool CollegeStudents { get; set; }
 
+        public bool ReEnteringIndividuals { get; set; }
+
         public bool ExperiencingHomelessness { get; set; }
 
         public bool SurvivorsOfDomesticViolence { get; set; }
@@ -110,23 +113,7 @@ namespace CovidSupport.Api.Models
         
         public bool Immigrants { get; set; }
 
-        public bool Spanish { get; set; }
-
-        public bool French { get; set; }
-
-        public bool Korean { get; set; }
-
-        public bool Chinese { get; set; }
-
-        public bool Japanese { get; set; }
-
-        public bool Arabic { get; set; }
-
-        public bool Malay { get; set; }
-
-        public bool Karen { get; set; }
-
-        public bool Burmese { get; set; }
+        public string[] LanguagesSupported { get; set; }
         
         public bool AcceptsMedicare { get; set; }
 
