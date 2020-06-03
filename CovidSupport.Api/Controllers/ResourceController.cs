@@ -7,7 +7,6 @@ using System.Web.Http;
 using CovidSupport.Api.Models;
 using Examine;
 using Examine.LuceneEngine.Search;
-using Examine.Search;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core.Models.PublishedContent;
@@ -20,11 +19,6 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage Settings()
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
                 var settings = new ResourceSettings
@@ -42,21 +36,19 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage GetAll(string language = "")
+        public HttpResponseMessage GetAll()
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
-                var culture = this.GetCultureName(language);
                 var results = this.Searcher.CreateQuery("content").All().Execute();
 
-                var items = results.Select(x => this.BuildResourceListItem(x, culture));
+                var items = results.Select(x => this.BuildResourceItem(x, this.CultureName));
 
                 return this.Request.CreateResponse(HttpStatusCode.OK, items, this.FormatterConfiguration);
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
             }
             catch (Exception e)
             {
@@ -65,16 +57,10 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage GetByCategory(string id, string language = "")
+        public HttpResponseMessage GetByCategory(string id)
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
-                var culture = this.GetCultureName(language);
                 IEnumerable<ResourceListItem> items;
                 var categories = this.GetCategories();
                 var category = this.FindInCategoryTree(categories, id);
@@ -82,7 +68,7 @@ namespace CovidSupport.Api.Controllers
                 if (category != null)
                 {
                     var results = this.Index.GetSearcher().CreateQuery("content").Field("parentID", category.Id.ToString()).Execute();
-                    items = results.Select(x => this.BuildResourceListItem(x, culture));
+                    items = results.Select(x => this.BuildResourceListItem(x, this.CultureName));
                 }
                 else
                 {
@@ -91,6 +77,10 @@ namespace CovidSupport.Api.Controllers
                 
                 return this.Request.CreateResponse(HttpStatusCode.OK, items, this.FormatterConfiguration);
             }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
             catch (Exception e)
             {
                 return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
@@ -98,16 +88,10 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage GetByRegion(string id, string language = "")
+        public HttpResponseMessage GetByRegion(string id)
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-            
             try
             {
-                var culture = this.GetCultureName(language);
                 IEnumerable<ResourceListItem> items;
 
                 var regionNode = this.Website.DescendantOfType("regions").FirstChild(x =>
@@ -117,16 +101,13 @@ namespace CovidSupport.Api.Controllers
                 {
                     var searcher = this.Index.GetSearcher();
 
-                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+                    var query = (LuceneSearchQueryBase) searcher.CreateQuery("content");
                     query.QueryParser.AllowLeadingWildcard = true;
 
-                    var val = "*farm*"; //"umb://document/" + regionNode.Key.ToString().Replace("-", string.Empty) + "*";
-                    var results = query.Field("providerName", val.MultipleCharacterWildcard()).Execute();
+                    var val = "*" + regionNode.Key.ToString().Replace("-", string.Empty);
+                    var results = query.Field("serviceRegions", val.MultipleCharacterWildcard()).Execute();
 
-                    var result = this.Index.GetSearcher().CreateQuery("content").Id(1351.ToString()).Execute(1).FirstOrDefault();
-                    var reg = result.GetValues("providerName").FirstOrDefault();
-
-                    items = results.Select(x => this.BuildResourceListItem(x, culture));
+                    items = results.Select(x => this.BuildResourceListItem(x, this.CultureName));
                 }
                 else
                 {
@@ -135,6 +116,10 @@ namespace CovidSupport.Api.Controllers
 
                 return this.Request.CreateResponse(HttpStatusCode.OK, items, this.FormatterConfiguration);
             }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
             catch (Exception e)
             {
                 return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
@@ -142,21 +127,15 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage Get(string id, string language = "")
+        public HttpResponseMessage Get(string id)
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
-                var culture = this.GetCultureName(language);
                 var result = this.Index.GetSearcher().CreateQuery("content").Id(id).Execute(1).FirstOrDefault();
 
                 if (result != null)
                 {
-                    var item = this.BuildResourceItem(result, culture);
+                    var item = this.BuildResourceItem(result, this.CultureName);
 
                     return this.Request.CreateResponse(HttpStatusCode.Accepted, item, this.FormatterConfiguration);
                 }
@@ -164,6 +143,10 @@ namespace CovidSupport.Api.Controllers
                 {
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource not found.");
                 }
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
             }
             catch (Exception e)
             {
@@ -415,7 +398,12 @@ namespace CovidSupport.Api.Controllers
         {
             var openingHours = new StartEndTime();
 
-            if (!string.IsNullOrEmpty(str))
+            if (string.IsNullOrEmpty(str))
+            {
+                return openingHours;
+            }
+
+            try
             {
                 var openingHoursVal = JsonConvert.DeserializeObject<JArray>(str)?.FirstOrDefault();
 
@@ -438,6 +426,10 @@ namespace CovidSupport.Api.Controllers
                     }
                 }
             }
+            catch (Exception)
+            {
+                return openingHours;
+            }
 
             return openingHours;
         }
@@ -446,7 +438,12 @@ namespace CovidSupport.Api.Controllers
         {
             var phones = new List<LanguagePhone>();
 
-            if (!string.IsNullOrEmpty(str))
+            if (string.IsNullOrEmpty(str))
+            {
+                return phones;
+            }
+
+            try
             {
                 var languagePhonesVal = JsonConvert.DeserializeObject<JArray>(str);
 
@@ -460,12 +457,16 @@ namespace CovidSupport.Api.Controllers
                             : null;
                         var phoneNumber = languagePhoneVal.Value<string>("phoneNumber");
 
-                        phones.Add(new LanguagePhone {Language = language, Phone = phoneNumber});
+                        phones.Add(new LanguagePhone { Language = language, Phone = phoneNumber });
                     }
                 }
-            }
 
-            return phones;
+                return phones;
+            }
+            catch (Exception)
+            {
+                return phones;
+            }
         }
     }
 }
