@@ -271,6 +271,7 @@
     <Content Include="App_Plugins\CsvImport\csvimport.resources.js" />
     <Content Include="App_Plugins\CsvImport\lang\en-US.xml" />
     <Content Include="App_Plugins\CsvImport\lib\papaparse.min.js" />
+    <Content Include="App_Plugins\CustomDatePicker\customdatepicker.filter.js" />
     <Content Include="App_Plugins\CustomDatePicker\customdatepicker.html" />
     <Content Include="App_Plugins\LeafletMap\css\leafletmap.css" />
     <Content Include="App_Plugins\LeafletMap\js\leafletmap.controller.js" />

@@ -31,6 +31,7 @@
 		icon: "icon-time"
   	}],
     javascript: [
-      "~/App_Plugins/CustomDatePicker/customdatepicker.controller.js"
+      "~/App_Plugins/CustomDatePicker/customdatepicker.controller.js",
+      "~/App_Plugins/CustomDatePicker/customdatepicker.filter.js"
     ]
 }
