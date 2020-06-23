@@ -271,6 +271,8 @@
     <Content Include="App_Plugins\CsvImport\csvimport.resources.js" />
     <Content Include="App_Plugins\CsvImport\lang\en-US.xml" />
     <Content Include="App_Plugins\CsvImport\lib\papaparse.min.js" />
+    <Content Include="App_Plugins\CustomDatePicker\customdatepicker.filter.js" />
+    <Content Include="App_Plugins\CustomDatePicker\customdatepicker.html" />
     <Content Include="App_Plugins\LeafletMap\css\leafletmap.css" />
     <Content Include="App_Plugins\LeafletMap\js\leafletmap.controller.js" />
     <Content Include="App_Plugins\LeafletMap\js\leafletmap.factory.js" />
@@ -350,6 +352,8 @@
     <Content Include="App_Plugins\FontAwesomeIconPack\fonts\fa-solid-900.woff2" />
     <Content Include="App_Plugins\FontAwesomeIconPack\package.manifest" />
     <Content Include="App_Plugins\CsvImport\package.manifest" />
+    <Content Include="App_Plugins\CustomDatePicker\package.manifest" />
+    <Content Include="App_Plugins\CustomDatePicker\customdatepicker.controller.js" />
     <None Include="packages.config" />
     <Content Include="Views\Web.config" />
     <Content Include="Views\Partials\Grid\Editors\Textstring.cshtml" />

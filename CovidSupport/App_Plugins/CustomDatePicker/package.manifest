@@ -1,0 +1,37 @@
+﻿{
+    propertyEditors: [
+    {
+        alias: "Vizioz.CustomDatePicker",
+        name: "Custom Date Picker",
+        editor: {
+            view: "~/App_Plugins/CustomDatePicker/customdatepicker.html"
+        },
+		prevalues: {
+			fields: [
+				{
+					label: "Date Format",
+					description: "If left empty then the format is YYYY-MM-DD. (see momentjs.com for supported formats)",
+					key: "format",
+					view: "textstring"
+				},
+				{
+					label: "Offset Time",
+					description: "When enabled the time displayed will be offset with the server's timezone, this is useful for scenarios like scheduled publishing when an editor is in a different timezone than the hosted server",
+					key: "offsetTime",
+					view: "boolean"
+				},
+				{
+					label: "AM / PM Format",
+					description: "When enabled the time picker will take the AM/PM format. Otherwise it will take the default 24 hour format.",
+					key: "amPm",
+					view: "boolean"
+				}
+			]
+		},
+		icon: "icon-time"
+  	}],
+    javascript: [
+      "~/App_Plugins/CustomDatePicker/customdatepicker.controller.js",
+      "~/App_Plugins/CustomDatePicker/customdatepicker.filter.js"
+    ]
+}
