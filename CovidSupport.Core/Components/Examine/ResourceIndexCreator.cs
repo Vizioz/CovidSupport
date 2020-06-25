@@ -84,14 +84,13 @@ namespace CovidSupport.Core.Components.Examine
                 try
                 {
                     var cache = cref.UmbracoContext.Content;
-
-                    var sites = cache.GetByXPath("//website");
+                    var sites = cache.GetAtRoot().Where(x => x.ContentType.Alias == "website");
 
                     foreach (var site in sites)
                     {
                         var siteNode = new WebsiteNode
                         {
-                            WebsiteId = site.Id, 
+                            WebsiteId = site.Id,
                             WebsiteName = site.Name
                         };
 
