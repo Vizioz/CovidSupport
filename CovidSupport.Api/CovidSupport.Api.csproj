@@ -242,6 +242,7 @@
     <Compile Include="Controllers\ResourceController.cs" />
     <Compile Include="Interfaces\IResourceItem.cs" />
     <Compile Include="Models\ApiNotFoundException.cs" />
+    <Compile Include="Models\Region.cs" />
     <Compile Include="Models\Resource.cs" />
     <Compile Include="Models\MapInfo.cs" />
     <Compile Include="Models\ResourceCategory.cs" />

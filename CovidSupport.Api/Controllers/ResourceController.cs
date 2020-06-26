@@ -190,11 +190,13 @@ namespace CovidSupport.Api.Controllers
             return findCategory;
         }
 
-        private IEnumerable<string> GetRegions()
+        private IEnumerable<Region> GetRegions()
         {
-            var results = this.Searcher.CreateQuery("content").All().Execute();
+            var regionsNode = this.Website.DescendantOfType("regions");
 
-            return results.Select(x => x.Values["region"]).Where(val => !string.IsNullOrEmpty(val)).Distinct();
+            return regionsNode != null
+                ? regionsNode.Children.Select(x => new Region {Id = x.Id, Name = x.Name})
+                : new List<Region>();
         }
 
         private ResourceCategory BuildCategory(IPublishedContent content)
