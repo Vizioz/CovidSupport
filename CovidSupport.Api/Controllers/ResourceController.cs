@@ -98,7 +98,7 @@ namespace CovidSupport.Api.Controllers
                 IEnumerable<ResourceListItem> items;
 
                 var regionNode = this.Website.DescendantOfType("regions").FirstChild(x =>
-                    string.Equals(x.Name, id, StringComparison.InvariantCultureIgnoreCase));
+                    string.Equals(x.Id.ToString(), id, StringComparison.InvariantCulture));
 
                 if (regionNode != null)
                 {
