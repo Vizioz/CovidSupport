@@ -92,13 +92,15 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage GetByRegion(int id)
+        public HttpResponseMessage GetByRegion(string id)
         {
             try
             {
                 IEnumerable<ResourceListItem> items;
 
-                var regionNode = this.Website.DescendantOfType("regions").FirstChild(x => x.Id == id);
+                var regionNode = int.TryParse(id, out int intId)
+                    ? this.Website.DescendantOfType("regions").FirstChild(x => x.Id == intId)
+                    : this.Website.DescendantOfType("regions").FirstChild(x => x.UrlSegment == id);
 
                 if (regionNode != null)
                 {
@@ -128,7 +130,7 @@ namespace CovidSupport.Api.Controllers
                 return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
             }
         }
-
+        
         [HttpGet]
         public HttpResponseMessage Get(int id)
         {
@@ -203,7 +205,7 @@ namespace CovidSupport.Api.Controllers
             var regionsNode = this.Website.DescendantOfType("regions");
 
             return regionsNode != null
-                ? regionsNode.Children.Select(x => new Region {Id = x.Id, Name = x.Name})
+                ? regionsNode.Children.Select(x => new Region {Id = x.Id, Name = x.Name, Slug = x.UrlSegment})
                 : new List<Region>();
         }
 
