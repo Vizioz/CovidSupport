@@ -60,7 +60,7 @@ namespace CovidSupport.Api.Controllers
         ////}
 
         [HttpGet]
-        public HttpResponseMessage GetByCategory(string id)
+        public HttpResponseMessage GetByCategory(int id)
         {
             try
             {
@@ -91,14 +91,13 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage GetByRegion(string id)
+        public HttpResponseMessage GetByRegion(int id)
         {
             try
             {
                 IEnumerable<ResourceListItem> items;
 
-                var regionNode = this.Website.DescendantOfType("regions").FirstChild(x =>
-                    string.Equals(x.Id.ToString(), id, StringComparison.InvariantCulture));
+                var regionNode = this.Website.DescendantOfType("regions").FirstChild(x => x.Id == id);
 
                 if (regionNode != null)
                 {
@@ -130,11 +129,11 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage Get(string id)
+        public HttpResponseMessage Get(int id)
         {
             try
             {
-                var result = this.Index.GetSearcher().CreateQuery("content").Id(id).Execute(1).FirstOrDefault();
+                var result = this.Index.GetSearcher().CreateQuery("content").Id(id.ToString()).Execute(1).FirstOrDefault();
 
                 if (result != null)
                 {
@@ -159,26 +158,34 @@ namespace CovidSupport.Api.Controllers
 
         private IEnumerable<ResourceCategory> GetCategories()
         {
+            var resourceTypesContainer =
+                this.Services.ContentTypeService.GetContainers("Resource Types", 1).FirstOrDefault()?.Id ?? 0;
+
+            var resourceGroupsContainer = this.Services.ContentTypeService.GetContainers("Resource Category Groups", 1)
+                                              .FirstOrDefault()?.Id ?? 0;
+
+            var resourceTypeItems = this.Services.ContentTypeService.GetAll()
+                .Where(x => x.ParentId == resourceTypesContainer || x.ParentId == resourceGroupsContainer)
+                .Select(x => x.Alias);
+
             var resourcesNode = this.Website.FirstChildOfType("communityResources");
 
-            return resourcesNode != null
-                ? resourcesNode.Children.Select(this.BuildCategory)
-                : new List<ResourceCategory>();
+            return this.GetChildrenCategories(resourcesNode, resourceTypeItems);
         }
 
-        private ResourceCategory FindInCategoryTree(IEnumerable<ResourceCategory> categories, string code)
+        private ResourceCategory FindInCategoryTree(IEnumerable<ResourceCategory> categories, int id)
         {
             ResourceCategory findCategory = null;
 
             foreach (var category in categories)
             {
-                if (string.Equals(category.Code, code, StringComparison.InvariantCultureIgnoreCase))
+                if (category.Id == id)
                 {
                     findCategory = category;
                 }
                 else if (category.Subcategories.Any())
                 {
-                    findCategory = this.FindInCategoryTree(category.Subcategories, code);
+                    findCategory = this.FindInCategoryTree(category.Subcategories, id);
                 }
 
                 if (findCategory != null)
@@ -199,25 +206,24 @@ namespace CovidSupport.Api.Controllers
                 : new List<Region>();
         }
 
-        private ResourceCategory BuildCategory(IPublishedContent content)
+        private IEnumerable<ResourceCategory> GetChildrenCategories(IPublishedContent content, IEnumerable<string> typeItems)
         {
-            var category = new ResourceCategory
-            {
-                Id = content.Id,
-                Name = content.Name,
-                Code = content.ContentType.Alias
-            };
+            var categories = new List<ResourceCategory>();
 
-            if (content.ContentType.Alias == "resourceCategory")
+            if (content != null)
             {
-                category.Subcategories = content.Children.Select(this.BuildCategory);
+                categories.AddRange(content.Children
+                    .Where(x => typeItems.Contains(x.ContentType.Alias, StringComparer.InvariantCultureIgnoreCase))
+                    .Select(x => new ResourceCategory
+                        {Id = x.Id, Name = x.Name, Subcategories = this.GetChildrenCategories(x, typeItems)}));
             }
 
-            return category;
+            return categories;
         }
 
         private ResourceListItem BuildResourceListItem(ISearchResult searchResult)
         {
+            var v = searchResult.AllValues;
             int.TryParse(searchResult.Id, out int id);
             var providerName = searchResult.GetValues("providerName").FirstOrDefault();
             var description = searchResult.GetValues("cuisine").FirstOrDefault();
