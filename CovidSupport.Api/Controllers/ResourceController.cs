@@ -38,26 +38,26 @@ namespace CovidSupport.Api.Controllers
             }
         }
 
-        [HttpGet]
-        public HttpResponseMessage GetAll()
-        {
-            try
-            {
-                var results = this.Searcher.CreateQuery("content").All().Execute();
+        ////[HttpGet]
+        ////public HttpResponseMessage GetAll()
+        ////{
+        ////    try
+        ////    {
+        ////        var results = this.Searcher.CreateQuery("content").All().Execute();
 
-                var items = results.Select(this.BuildResourceListItem);
+        ////        var items = results.Select(this.BuildResourceListItem);
 
-                return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
-            }
-            catch (ApiNotFoundException e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-            }
-            catch (Exception e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
-            }
-        }
+        ////        return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
+        ////    }
+        ////    catch (ApiNotFoundException e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+        ////    }
+        ////    catch (Exception e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+        ////    }
+        ////}
 
         [HttpGet]
         public HttpResponseMessage GetByCategory(string id)
