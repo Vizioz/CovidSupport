@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
 using System.Web.Http;
+using System.Web.Http.Controllers;
+using CovidSupport.Api.Constants;
 using Examine;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -12,8 +14,12 @@ namespace CovidSupport.Api.Controllers
     public abstract class BaseApiController : UmbracoApiController
     {
         protected IPublishedContent Website { get; private set; }
-        
+
         protected string WebsiteUrl { get; private set; }
+
+        protected string ApiLanguage { get; set; }
+
+        protected string CultureName { get; set; }
 
         protected string ResourcesIndexName { get; private set; }
 
@@ -21,37 +27,57 @@ namespace CovidSupport.Api.Controllers
 
         protected HttpConfiguration FormatterConfiguration { get; private set; }
         
-        protected BaseApiController()
+        protected ISearcher Searcher => this.Index.GetSearcher();
+
+        protected override void Initialize(HttpControllerContext controllerContext)
         {
+            base.Initialize(controllerContext);
+
             this.SetConfiguration();
             this.SetWebsiteProvider();
         }
-        
-        protected ISearcher Searcher => this.Index.GetSearcher();
 
         private void SetWebsiteProvider()
         {
-            var host = this.ApplicationUrl.Host.Trim('/');
-            this.WebsiteUrl = host;
+            var uri = this.ControllerContext.Request.RequestUri;
+            var apiUrl = uri.Authority.Trim('/');
+
+            if (uri.Segments.Length > 1)
+            {
+                var segment = uri.Segments[1].Trim('/');
+
+                if (segment != ApiConstants.ApiName)
+                {
+                    this.ApiLanguage = segment;
+                    apiUrl = apiUrl + "/" + this.ApiLanguage;
+                }
+            }
 
             var domain = this.Services.DomainService.GetAll(true)
-                .FirstOrDefault(x => string.Equals(this.TrimDomainName(x.DomainName), host, StringComparison.InvariantCultureIgnoreCase));
+                .FirstOrDefault(x => string.Equals(this.TrimDomainName(x.DomainName), apiUrl, StringComparison.InvariantCultureIgnoreCase));
 
-            if (domain != null)
+            if (domain == null)
             {
-                var websiteId = domain.RootContentId ?? (int)default;
-                var website = this.Umbraco.Content(websiteId);
+                throw new Exception($"No domain found for {apiUrl}");
+            }
 
-                if (website != null)
-                {
-                    this.Website = website;
-                    this.ResourcesIndexName = "CommunityResourceIndex-" + website.Name;
+            this.WebsiteUrl = apiUrl;
+            this.CultureName = domain.LanguageIsoCode.ToLowerInvariant();
 
-                    if (ExamineManager.Instance.TryGetIndex(this.ResourcesIndexName, out var index))
-                    {
-                        this.Index = index;
-                    }
-                }
+            var websiteId = domain.RootContentId ?? (int)default;
+            var website = this.Umbraco.Content(websiteId);
+
+            if (website == null)
+            {
+                throw new Exception($"No website root found for {apiUrl}");
+            }
+
+            this.Website = website;
+            this.ResourcesIndexName = "CommunityResourceIndex-" + website.Name;
+
+            if (ExamineManager.Instance.TryGetIndex(this.ResourcesIndexName, out var index))
+            {
+                this.Index = index;
             }
         }
 

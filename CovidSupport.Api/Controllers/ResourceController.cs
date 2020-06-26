@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Web.Http;
 using CovidSupport.Api.Models;
 using Examine;
+using Examine.LuceneEngine.Search;
 using Newtonsoft.Json;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
@@ -17,11 +18,6 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage Settings()
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
                 var settings = new ResourceSettings
@@ -32,6 +28,10 @@ namespace CovidSupport.Api.Controllers
 
                 return this.Request.CreateResponse(HttpStatusCode.Accepted, settings, this.FormatterConfiguration);
             }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
             catch (Exception e)
             {
                 return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
@@ -41,11 +41,6 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage GetAll()
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
                 var results = this.Searcher.CreateQuery("content").All().Execute();
@@ -53,6 +48,10 @@ namespace CovidSupport.Api.Controllers
                 var items = results.Select(this.BuildResourceListItem);
 
                 return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
             }
             catch (Exception e)
             {
@@ -63,11 +62,6 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage GetByCategory(string id)
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
                 IEnumerable<ResourceListItem> items = new List<ResourceListItem>();
@@ -86,6 +80,49 @@ namespace CovidSupport.Api.Controllers
                 
                 return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
             }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
+            catch (Exception e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+            }
+        }
+
+        [HttpGet]
+        public HttpResponseMessage GetByRegion(string id)
+        {
+            try
+            {
+                IEnumerable<ResourceListItem> items;
+
+                var regionNode = this.Website.DescendantOfType("regions").FirstChild(x =>
+                    string.Equals(x.Name, id, StringComparison.InvariantCultureIgnoreCase));
+
+                if (regionNode != null)
+                {
+                    var searcher = this.Index.GetSearcher();
+
+                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+                    query.QueryParser.AllowLeadingWildcard = true;
+
+                    var val = "*" + regionNode.Key.ToString().Replace("-", string.Empty);
+                    var results = query.Field("serviceRegions", val.MultipleCharacterWildcard()).Execute();
+
+                    items = results.Select(this.BuildResourceListItem);
+                }
+                else
+                {
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Region not found.");
+                }
+
+                return this.Request.CreateResponse(HttpStatusCode.OK, items, this.FormatterConfiguration);
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
             catch (Exception e)
             {
                 return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
@@ -95,11 +132,6 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage Get(string id)
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
                 var result = this.Index.GetSearcher().CreateQuery("content").Id(id).Execute(1).FirstOrDefault();
@@ -114,6 +146,10 @@ namespace CovidSupport.Api.Controllers
                 {
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource not found.");
                 }
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
             }
             catch (Exception e)
             {
