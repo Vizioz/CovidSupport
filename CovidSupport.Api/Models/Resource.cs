@@ -1,4 +1,5 @@
-﻿using CovidSupport.Api.Interfaces;
+﻿using System.Collections.Generic;
+using CovidSupport.Api.Interfaces;
 
 namespace CovidSupport.Api.Models
 {
@@ -35,34 +36,10 @@ namespace CovidSupport.Api.Models
 
         public string ProviderAddLoc { get; set; }
 
-        public string Monday { get; set; }
+        public List<OpeningTimes> OpenHours { get; set; }
 
-        public string Tuesday { get; set; }
-
-        public string Wednesday { get; set; }
-
-        public string Thursday { get; set; }
-
-        public string Friday { get; set; }
-
-        public string Saturday { get; set; }
-
-        public string Sunday { get; set; }
-
-        public string SpMonday { get; set; }
-
-        public string SpTuesday { get; set; }
-
-        public string SpWednesday { get; set; }
-
-        public string SpThursday { get; set; }
-
-        public string SpFriday { get; set; }
-
-        public string SpSaturday { get; set; }
-
-        public string SpSunday { get; set; }
-
+        public List<OpeningTimes> SpecialHours { get; set; }
+        
         public string Contact { get; set; }
 
         public string ContactSpanish { get; set; }

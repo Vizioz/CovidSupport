@@ -8,6 +8,7 @@ using CovidSupport.Api.Models;
 using Examine;
 using Examine.LuceneEngine.Search;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 
@@ -209,7 +210,7 @@ namespace CovidSupport.Api.Controllers
         private IEnumerable<ResourceCategory> GetChildrenCategories(IPublishedContent content, IEnumerable<string> typeItems)
         {
             var categories = new List<ResourceCategory>();
-
+            
             if (content != null)
             {
                 categories.AddRange(content.Children
@@ -223,7 +224,6 @@ namespace CovidSupport.Api.Controllers
 
         private ResourceListItem BuildResourceListItem(ISearchResult searchResult)
         {
-            var v = searchResult.AllValues;
             int.TryParse(searchResult.Id, out int id);
             var providerName = searchResult.GetValues("providerName").FirstOrDefault();
             var description = searchResult.GetValues("cuisine").FirstOrDefault();
@@ -256,6 +256,7 @@ namespace CovidSupport.Api.Controllers
 
         private Resource BuildResourceItem(ISearchResult searchResult)
         {
+            // Base properties
             int.TryParse(searchResult.Id, out int id);
             var providerName = searchResult.GetValues("providerName").FirstOrDefault();
             var description = searchResult.GetValues("cuisine").FirstOrDefault();
@@ -269,24 +270,37 @@ namespace CovidSupport.Api.Controllers
             var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
             var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
 
+            // Provider
             var providerAddLoc = searchResult.GetValues("providerAddLoc").FirstOrDefault();
             var free = searchResult.GetValues("map").FirstOrDefault() == "1";
 
-            var monday = searchResult.GetValues("monday").FirstOrDefault();
-            var tuesday = searchResult.GetValues("tuesday").FirstOrDefault();
-            var wednesday = searchResult.GetValues("wednesday").FirstOrDefault();
-            var thursday = searchResult.GetValues("thursday").FirstOrDefault();
-            var friday = searchResult.GetValues("friday").FirstOrDefault();
-            var saturday = searchResult.GetValues("saturday").FirstOrDefault();
-            var sunday = searchResult.GetValues("sunday").FirstOrDefault();
-            var spMonday = searchResult.GetValues("spMonday").FirstOrDefault();
-            var spTuesday = searchResult.GetValues("spTuesday").FirstOrDefault();
-            var spWednesday = searchResult.GetValues("spWednesday").FirstOrDefault();
-            var spThursday = searchResult.GetValues("spThursday").FirstOrDefault();
-            var spFriday = searchResult.GetValues("spFriday").FirstOrDefault();
-            var spSaturday = searchResult.GetValues("spSaturday").FirstOrDefault();
-            var spSunday = searchResult.GetValues("spSunday").FirstOrDefault();
+            // Opening Hours
+            var openingHours = new List<OpeningTimes>
+            {
+                this.GetDayOpeningTimes("monday", searchResult.GetValues("monday").FirstOrDefault()),
+                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("tuesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("wednesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("thursday", searchResult.GetValues("thursday").FirstOrDefault()),
+                this.GetDayOpeningTimes("friday", searchResult.GetValues("friday").FirstOrDefault()),
+                this.GetDayOpeningTimes("saturday", searchResult.GetValues("saturday").FirstOrDefault()),
+                this.GetDayOpeningTimes("sunday", searchResult.GetValues("sunday").FirstOrDefault())
+            };
+            openingHours = openingHours.Where(x => x.Hours.Any()).ToList();
 
+            // Special opening Hours
+            var specialHours = new List<OpeningTimes>
+            {
+                this.GetDayOpeningTimes("monday", searchResult.GetValues("spMonday").FirstOrDefault()),
+                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("spTuesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("spWednesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("thursday", searchResult.GetValues("spThursday").FirstOrDefault()),
+                this.GetDayOpeningTimes("friday", searchResult.GetValues("spFriday").FirstOrDefault()),
+                this.GetDayOpeningTimes("saturday", searchResult.GetValues("spSaturday").FirstOrDefault()),
+                this.GetDayOpeningTimes("sunday", searchResult.GetValues("spSunday").FirstOrDefault())
+            };
+            specialHours = specialHours.Where(x => x.Hours.Any()).ToList();
+
+            // Contact
             var contact = searchResult.GetValues("contact").FirstOrDefault();
             var contactSpanish = searchResult.GetValues("contactSpanish").FirstOrDefault();
             var email = searchResult.GetValues("email").FirstOrDefault();
@@ -295,6 +309,7 @@ namespace CovidSupport.Api.Controllers
             var instagram = searchResult.GetValues("instagram").FirstOrDefault();
             var facebook = searchResult.GetValues("facebook").FirstOrDefault();
             
+            // Instructions
             var instructions = searchResult.GetValues("instructions").FirstOrDefault();
             var offers = searchResult.GetValues("offers").FirstOrDefault();
             var notes = searchResult.GetValues("notes").FirstOrDefault();
@@ -314,20 +329,8 @@ namespace CovidSupport.Api.Controllers
                 Options = options,
                 ProviderAddLoc = providerAddLoc,
                 Free = free,
-                Monday = monday,
-                Tuesday = tuesday,
-                Wednesday = wednesday,
-                Thursday = thursday,
-                Friday = friday,
-                Saturday = saturday,
-                Sunday = sunday,
-                SpMonday = spMonday,
-                SpTuesday = spTuesday,
-                SpWednesday = spWednesday,
-                SpThursday = spThursday,
-                SpFriday = spFriday,
-                SpSaturday = spSaturday,
-                SpSunday = spSunday,
+                OpenHours = openingHours,
+                SpecialHours = specialHours,
                 Contact = contact,
                 ContactSpanish = contactSpanish,
                 Email = email,
@@ -339,6 +342,53 @@ namespace CovidSupport.Api.Controllers
                 Offers = offers,
                 Notes = notes
             };
+        }
+
+        private OpeningTimes GetDayOpeningTimes(string day, string str)
+        {
+            var openingTimes = new OpeningTimes(day);
+
+            if (string.IsNullOrEmpty(str))
+            {
+                return openingTimes;
+            }
+
+            try
+            {
+                var hours = new List<StartEndTime>();
+                var openingHoursArray = JsonConvert.DeserializeObject<JArray>(str);//.FirstOrDefault();
+
+                foreach (var openingHoursVal in openingHoursArray)
+                {
+                    var startTime = openingHoursVal.Value<DateTime?>("startTime");
+                    var endTime = openingHoursVal.Value<DateTime?>("endTime");
+
+                    if (startTime != null || endTime != null)
+                    {
+                        var startEndTime = new StartEndTime();
+
+                        if (startTime != null)
+                        {
+                            startEndTime.StarTime = ((DateTime)startTime).ToString("HH:mm:ss");
+                        }
+
+                        if (endTime != null)
+                        {
+                            startEndTime.EndTime = ((DateTime)endTime).ToString("HH:mm:ss");
+                        }
+
+                        hours.Add(startEndTime);
+                    }
+                }
+
+                openingTimes.Hours = hours;
+            }
+            catch (Exception)
+            {
+                return openingTimes;
+            }
+
+            return openingTimes;
         }
     }
 }
