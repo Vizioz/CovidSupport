@@ -232,7 +232,7 @@ namespace CovidSupport.Api.Controllers
             var stateList = searchResult.GetValues("state").FirstOrDefault();
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[]{};
             var zip = searchResult.GetValues("zip").FirstOrDefault();
-            var region = searchResult.GetValues("region").FirstOrDefault();
+            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
             var map = searchResult.GetValues("map").FirstOrDefault();
             var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
 
@@ -247,7 +247,7 @@ namespace CovidSupport.Api.Controllers
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
-                Region = region,
+                Region = string.Join(",", region),
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options
@@ -265,7 +265,7 @@ namespace CovidSupport.Api.Controllers
             var stateList = searchResult.GetValues("state").FirstOrDefault();
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
             var zip = searchResult.GetValues("zip").FirstOrDefault();
-            var region = searchResult.GetValues("region").FirstOrDefault();
+            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
             var map = searchResult.GetValues("map").FirstOrDefault();
             var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
             var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
@@ -323,7 +323,7 @@ namespace CovidSupport.Api.Controllers
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
-                Region = region,
+                Region = string.Join(",", region),
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options,
@@ -389,6 +389,18 @@ namespace CovidSupport.Api.Controllers
             }
 
             return openingTimes;
+        }
+
+        private string[] GetNodesName(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return new string[] { };
+            }
+
+            var ids = str.Split(',');
+
+            return ids.Select(id => this.Umbraco.Content(id)).Where(x => x != null).Select(x => x.Name).ToArray();
         }
     }
 }
