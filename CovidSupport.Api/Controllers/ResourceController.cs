@@ -161,19 +161,9 @@ namespace CovidSupport.Api.Controllers
 
         private IEnumerable<ResourceCategory> GetCategories()
         {
-            var resourceTypesContainer =
-                this.Services.ContentTypeService.GetContainers("Resource Types", 1).FirstOrDefault()?.Id ?? 0;
-
-            var resourceGroupsContainer = this.Services.ContentTypeService.GetContainers("Resource Category Groups", 1)
-                                              .FirstOrDefault()?.Id ?? 0;
-
-            var resourceTypeItems = this.Services.ContentTypeService.GetAll()
-                .Where(x => x.ParentId == resourceTypesContainer || x.ParentId == resourceGroupsContainer)
-                .Select(x => x.Alias);
-
             var resourcesNode = this.Website.FirstChildOfType("communityResources");
 
-            return this.GetChildrenCategories(resourcesNode, resourceTypeItems);
+            return resourcesNode.Children.Select(this.GetCategory);
         }
 
         private ResourceCategory FindInCategoryTree(IEnumerable<ResourceCategory> categories, int id)
@@ -209,19 +199,27 @@ namespace CovidSupport.Api.Controllers
                 : new List<Region>();
         }
 
-        private IEnumerable<ResourceCategory> GetChildrenCategories(IPublishedContent content, IEnumerable<string> typeItems)
+        private ResourceCategory GetCategory(IPublishedContent content)
         {
-            var categories = new List<ResourceCategory>();
-            
-            if (content != null)
+            if (content == null)
             {
-                categories.AddRange(content.Children
-                    .Where(x => typeItems.Contains(x.ContentType.Alias, StringComparer.InvariantCultureIgnoreCase))
-                    .Select(x => new ResourceCategory
-                        {Id = x.Id, Name = x.Name, Subcategories = this.GetChildrenCategories(x, typeItems)}));
+                return null;
             }
 
-            return categories;
+            var category = new ResourceCategory
+            {
+                Id = content.Id,
+                Name = content.Name
+            };
+
+            var isContainer = this.Services.ContentTypeService.Get(content.ContentType.Id).IsContainer;
+
+            if (!isContainer)
+            {
+                category.Subcategories = content.Children.Select(this.GetCategory);
+            }
+
+            return category;
         }
 
         private ResourceListItem BuildResourceListItem(ISearchResult searchResult)

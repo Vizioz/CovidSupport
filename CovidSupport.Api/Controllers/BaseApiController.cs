@@ -4,6 +4,7 @@ using System.Web.Http;
 using System.Web.Http.Controllers;
 using CovidSupport.Api.Constants;
 using Examine;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 using Umbraco.Core.Models.PublishedContent;
@@ -86,6 +87,7 @@ namespace CovidSupport.Api.Controllers
             HttpConfiguration config = new HttpConfiguration();
             config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
             config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
+            config.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
             config.Formatters.JsonFormatter.UseDataContractJsonSerializer = false;
             this.FormatterConfiguration = config;
         }
