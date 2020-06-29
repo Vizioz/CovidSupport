@@ -110,7 +110,7 @@ namespace CovidSupport.Api.Controllers
                     query.QueryParser.AllowLeadingWildcard = true;
 
                     var val = "*" + regionNode.Key.ToString().Replace("-", string.Empty);
-                    var results = query.Field("serviceRegions", val.MultipleCharacterWildcard()).Execute();
+                    var results = query.Field("region", val.MultipleCharacterWildcard()).Execute();
 
                     items = results.Select(this.BuildResourceListItem);
                 }
