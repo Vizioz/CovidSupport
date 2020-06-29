@@ -205,7 +205,7 @@ namespace CovidSupport.Api.Controllers
             var regionsNode = this.Website.DescendantOfType("regions");
 
             return regionsNode != null
-                ? regionsNode.Children.Select(x => new Region {Id = x.Id, Name = x.Name, Slug = x.UrlSegment})
+                ? regionsNode.Children.Select(x => new Region {Name = x.Name, Alias = x.UrlSegment})
                 : new List<Region>();
         }
 
