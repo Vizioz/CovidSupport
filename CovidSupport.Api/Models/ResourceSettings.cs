@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace CovidSupport.Api.Models
 {
@@ -7,11 +6,11 @@ namespace CovidSupport.Api.Models
     {
         public ResourceSettings()
         {
-            this.Regions = new List<string>();
+            this.Regions = new List<Region>();
             this.Categories = new List<ResourceCategory>();
         }
 
-        public IEnumerable<string> Regions { get; set; }
+        public IEnumerable<Region> Regions { get; set; }
 
         public IEnumerable<ResourceCategory> Categories { get; set; }
     }

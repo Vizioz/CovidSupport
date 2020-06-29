@@ -6,7 +6,9 @@ using System.Net.Http;
 using System.Web.Http;
 using CovidSupport.Api.Models;
 using Examine;
+using Examine.LuceneEngine.Search;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 
@@ -17,11 +19,6 @@ namespace CovidSupport.Api.Controllers
         [HttpGet]
         public HttpResponseMessage Settings()
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
                 var settings = new ResourceSettings
@@ -32,27 +29,9 @@ namespace CovidSupport.Api.Controllers
 
                 return this.Request.CreateResponse(HttpStatusCode.Accepted, settings, this.FormatterConfiguration);
             }
-            catch (Exception e)
+            catch (ApiNotFoundException e)
             {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
-            }
-        }
-
-        [HttpGet]
-        public HttpResponseMessage GetAll()
-        {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
-            try
-            {
-                var results = this.Searcher.CreateQuery("content").All().Execute();
-
-                var items = results.Select(this.BuildResourceListItem);
-
-                return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
             }
             catch (Exception e)
             {
@@ -60,14 +39,30 @@ namespace CovidSupport.Api.Controllers
             }
         }
 
-        [HttpGet]
-        public HttpResponseMessage GetByCategory(string id)
-        {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
+        ////[HttpGet]
+        ////public HttpResponseMessage GetAll()
+        ////{
+        ////    try
+        ////    {
+        ////        var results = this.Searcher.CreateQuery("content").All().Execute();
 
+        ////        var items = results.Select(this.BuildResourceListItem);
+
+        ////        return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
+        ////    }
+        ////    catch (ApiNotFoundException e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+        ////    }
+        ////    catch (Exception e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+        ////    }
+        ////}
+
+        [HttpGet]
+        public HttpResponseMessage GetByCategory(int id)
+        {
             try
             {
                 IEnumerable<ResourceListItem> items = new List<ResourceListItem>();
@@ -86,6 +81,10 @@ namespace CovidSupport.Api.Controllers
                 
                 return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
             }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
             catch (Exception e)
             {
                 return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
@@ -93,16 +92,51 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage Get(string id)
+        public HttpResponseMessage GetByRegion(string id)
         {
-            if (this.Website == null)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Website not found for the address " + this.WebsiteUrl);
-            }
-
             try
             {
-                var result = this.Index.GetSearcher().CreateQuery("content").Id(id).Execute(1).FirstOrDefault();
+                IEnumerable<ResourceListItem> items;
+
+                var regionNode = int.TryParse(id, out int intId)
+                    ? this.Website.DescendantOfType("regions").FirstChild(x => x.Id == intId)
+                    : this.Website.DescendantOfType("regions").FirstChild(x => x.UrlSegment == id);
+
+                if (regionNode != null)
+                {
+                    var searcher = this.Index.GetSearcher();
+
+                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+                    query.QueryParser.AllowLeadingWildcard = true;
+
+                    var val = "*" + regionNode.Key.ToString().Replace("-", string.Empty);
+                    var results = query.Field("region", val.MultipleCharacterWildcard()).Execute();
+
+                    items = results.Select(this.BuildResourceListItem);
+                }
+                else
+                {
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Region not found.");
+                }
+
+                return this.Request.CreateResponse(HttpStatusCode.OK, items, this.FormatterConfiguration);
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
+            catch (Exception e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+            }
+        }
+        
+        [HttpGet]
+        public HttpResponseMessage Get(int id)
+        {
+            try
+            {
+                var result = this.Index.GetSearcher().CreateQuery("content").Id(id.ToString()).Execute(1).FirstOrDefault();
 
                 if (result != null)
                 {
@@ -115,6 +149,10 @@ namespace CovidSupport.Api.Controllers
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource not found.");
                 }
             }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
             catch (Exception e)
             {
                 return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
@@ -125,24 +163,22 @@ namespace CovidSupport.Api.Controllers
         {
             var resourcesNode = this.Website.FirstChildOfType("communityResources");
 
-            return resourcesNode != null
-                ? resourcesNode.Children.Select(this.BuildCategory)
-                : new List<ResourceCategory>();
+            return resourcesNode.Children.Select(this.GetCategory);
         }
 
-        private ResourceCategory FindInCategoryTree(IEnumerable<ResourceCategory> categories, string code)
+        private ResourceCategory FindInCategoryTree(IEnumerable<ResourceCategory> categories, int id)
         {
             ResourceCategory findCategory = null;
 
             foreach (var category in categories)
             {
-                if (string.Equals(category.Code, code, StringComparison.InvariantCultureIgnoreCase))
+                if (category.Id == id)
                 {
                     findCategory = category;
                 }
                 else if (category.Subcategories.Any())
                 {
-                    findCategory = this.FindInCategoryTree(category.Subcategories, code);
+                    findCategory = this.FindInCategoryTree(category.Subcategories, id);
                 }
 
                 if (findCategory != null)
@@ -154,25 +190,33 @@ namespace CovidSupport.Api.Controllers
             return findCategory;
         }
 
-        private IEnumerable<string> GetRegions()
+        private IEnumerable<Region> GetRegions()
         {
-            var results = this.Searcher.CreateQuery("content").All().Execute();
+            var regionsNode = this.Website.DescendantOfType("regions");
 
-            return results.Select(x => x.Values["region"]).Where(val => !string.IsNullOrEmpty(val)).Distinct();
+            return regionsNode != null
+                ? regionsNode.Children.Select(x => new Region {Name = x.Name, Alias = x.UrlSegment})
+                : new List<Region>();
         }
 
-        private ResourceCategory BuildCategory(IPublishedContent content)
+        private ResourceCategory GetCategory(IPublishedContent content)
         {
+            if (content == null)
+            {
+                return null;
+            }
+
             var category = new ResourceCategory
             {
                 Id = content.Id,
-                Name = content.Name,
-                Code = content.ContentType.Alias
+                Name = content.Name
             };
 
-            if (content.ContentType.Alias == "resourceCategory")
+            var isContainer = this.Services.ContentTypeService.Get(content.ContentType.Id).IsContainer;
+
+            if (!isContainer)
             {
-                category.Subcategories = content.Children.Select(this.BuildCategory);
+                category.Subcategories = content.Children.Select(this.GetCategory);
             }
 
             return category;
@@ -188,7 +232,7 @@ namespace CovidSupport.Api.Controllers
             var stateList = searchResult.GetValues("state").FirstOrDefault();
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[]{};
             var zip = searchResult.GetValues("zip").FirstOrDefault();
-            var region = searchResult.GetValues("region").FirstOrDefault();
+            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
             var map = searchResult.GetValues("map").FirstOrDefault();
             var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
 
@@ -203,7 +247,7 @@ namespace CovidSupport.Api.Controllers
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
-                Region = region,
+                Region = string.Join(",", region),
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options
@@ -212,6 +256,7 @@ namespace CovidSupport.Api.Controllers
 
         private Resource BuildResourceItem(ISearchResult searchResult)
         {
+            // Base properties
             int.TryParse(searchResult.Id, out int id);
             var providerName = searchResult.GetValues("providerName").FirstOrDefault();
             var description = searchResult.GetValues("cuisine").FirstOrDefault();
@@ -220,29 +265,42 @@ namespace CovidSupport.Api.Controllers
             var stateList = searchResult.GetValues("state").FirstOrDefault();
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
             var zip = searchResult.GetValues("zip").FirstOrDefault();
-            var region = searchResult.GetValues("region").FirstOrDefault();
+            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
             var map = searchResult.GetValues("map").FirstOrDefault();
             var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
             var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
 
+            // Provider
             var providerAddLoc = searchResult.GetValues("providerAddLoc").FirstOrDefault();
             var free = searchResult.GetValues("map").FirstOrDefault() == "1";
 
-            var monday = searchResult.GetValues("monday").FirstOrDefault();
-            var tuesday = searchResult.GetValues("tuesday").FirstOrDefault();
-            var wednesday = searchResult.GetValues("wednesday").FirstOrDefault();
-            var thursday = searchResult.GetValues("thursday").FirstOrDefault();
-            var friday = searchResult.GetValues("friday").FirstOrDefault();
-            var saturday = searchResult.GetValues("saturday").FirstOrDefault();
-            var sunday = searchResult.GetValues("sunday").FirstOrDefault();
-            var spMonday = searchResult.GetValues("spMonday").FirstOrDefault();
-            var spTuesday = searchResult.GetValues("spTuesday").FirstOrDefault();
-            var spWednesday = searchResult.GetValues("spWednesday").FirstOrDefault();
-            var spThursday = searchResult.GetValues("spThursday").FirstOrDefault();
-            var spFriday = searchResult.GetValues("spFriday").FirstOrDefault();
-            var spSaturday = searchResult.GetValues("spSaturday").FirstOrDefault();
-            var spSunday = searchResult.GetValues("spSunday").FirstOrDefault();
+            // Opening Hours
+            var openingHours = new List<OpeningTimes>
+            {
+                this.GetDayOpeningTimes("monday", searchResult.GetValues("monday").FirstOrDefault()),
+                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("tuesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("wednesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("thursday", searchResult.GetValues("thursday").FirstOrDefault()),
+                this.GetDayOpeningTimes("friday", searchResult.GetValues("friday").FirstOrDefault()),
+                this.GetDayOpeningTimes("saturday", searchResult.GetValues("saturday").FirstOrDefault()),
+                this.GetDayOpeningTimes("sunday", searchResult.GetValues("sunday").FirstOrDefault())
+            };
+            openingHours = openingHours.Where(x => x.Hours.Any()).ToList();
 
+            // Special opening Hours
+            var specialHours = new List<OpeningTimes>
+            {
+                this.GetDayOpeningTimes("monday", searchResult.GetValues("spMonday").FirstOrDefault()),
+                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("spTuesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("spWednesday").FirstOrDefault()),
+                this.GetDayOpeningTimes("thursday", searchResult.GetValues("spThursday").FirstOrDefault()),
+                this.GetDayOpeningTimes("friday", searchResult.GetValues("spFriday").FirstOrDefault()),
+                this.GetDayOpeningTimes("saturday", searchResult.GetValues("spSaturday").FirstOrDefault()),
+                this.GetDayOpeningTimes("sunday", searchResult.GetValues("spSunday").FirstOrDefault())
+            };
+            specialHours = specialHours.Where(x => x.Hours.Any()).ToList();
+
+            // Contact
             var contact = searchResult.GetValues("contact").FirstOrDefault();
             var contactSpanish = searchResult.GetValues("contactSpanish").FirstOrDefault();
             var email = searchResult.GetValues("email").FirstOrDefault();
@@ -251,6 +309,7 @@ namespace CovidSupport.Api.Controllers
             var instagram = searchResult.GetValues("instagram").FirstOrDefault();
             var facebook = searchResult.GetValues("facebook").FirstOrDefault();
             
+            // Instructions
             var instructions = searchResult.GetValues("instructions").FirstOrDefault();
             var offers = searchResult.GetValues("offers").FirstOrDefault();
             var notes = searchResult.GetValues("notes").FirstOrDefault();
@@ -264,26 +323,14 @@ namespace CovidSupport.Api.Controllers
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
-                Region = region,
+                Region = string.Join(",", region),
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options,
                 ProviderAddLoc = providerAddLoc,
                 Free = free,
-                Monday = monday,
-                Tuesday = tuesday,
-                Wednesday = wednesday,
-                Thursday = thursday,
-                Friday = friday,
-                Saturday = saturday,
-                Sunday = sunday,
-                SpMonday = spMonday,
-                SpTuesday = spTuesday,
-                SpWednesday = spWednesday,
-                SpThursday = spThursday,
-                SpFriday = spFriday,
-                SpSaturday = spSaturday,
-                SpSunday = spSunday,
+                OpenHours = openingHours,
+                SpecialHours = specialHours,
                 Contact = contact,
                 ContactSpanish = contactSpanish,
                 Email = email,
@@ -295,6 +342,65 @@ namespace CovidSupport.Api.Controllers
                 Offers = offers,
                 Notes = notes
             };
+        }
+
+        private OpeningTimes GetDayOpeningTimes(string day, string str)
+        {
+            var openingTimes = new OpeningTimes(day);
+
+            if (string.IsNullOrEmpty(str))
+            {
+                return openingTimes;
+            }
+
+            try
+            {
+                var hours = new List<StartEndTime>();
+                var openingHoursArray = JsonConvert.DeserializeObject<JArray>(str);//.FirstOrDefault();
+
+                foreach (var openingHoursVal in openingHoursArray)
+                {
+                    var startTime = openingHoursVal.Value<DateTime?>("startTime");
+                    var endTime = openingHoursVal.Value<DateTime?>("endTime");
+
+                    if (startTime != null || endTime != null)
+                    {
+                        var startEndTime = new StartEndTime();
+
+                        if (startTime != null)
+                        {
+                            startEndTime.StarTime = ((DateTime)startTime).ToString("HH:mm:ss");
+                        }
+
+                        if (endTime != null)
+                        {
+                            startEndTime.EndTime = ((DateTime)endTime).ToString("HH:mm:ss");
+                        }
+
+                        hours.Add(startEndTime);
+                    }
+                }
+
+                openingTimes.Hours = hours;
+            }
+            catch (Exception)
+            {
+                return openingTimes;
+            }
+
+            return openingTimes;
+        }
+
+        private string[] GetNodesName(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+            {
+                return new string[] { };
+            }
+
+            var ids = str.Split(',');
+
+            return ids.Select(id => this.Umbraco.Content(id)).Where(x => x != null).Select(x => x.Name).ToArray();
         }
     }
 }
