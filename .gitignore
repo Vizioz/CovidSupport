@@ -3,6 +3,8 @@ packages/
 CovidSupport/App_Data/
 CovidSupport/bin/
 CovidSupport/obj/
+CovidSupport.Api/bin/
+CovidSupport.Api/obj/
 CovidSupport.Core/bin/
 CovidSupport.Core/obj/
 CovidSupportWebsite.sln.DotSettings.user

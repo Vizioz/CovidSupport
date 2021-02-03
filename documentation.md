@@ -26,6 +26,10 @@ A root Website node contains generic settings for the website.
 
 A root Website can contain a "Resources" type node. This node will contain all resources available for this website, and they will be structured according to a tree of categories and subcategories.
 
+Umbraco can store multilingual sites, making the content nodes multilingual too. Content has thus the potential of acceptiong different text/value variations for different languages when applicable.
+
+The current available languages are English and Spanish. By common practice, different language versions are usually available by appending the language code to the main domain URL, i.e. wwww.mywebsite.com/es. Each domain for each different language of a website needs to be defined in the Umbraco backoffice.
+
 ### Creating content
 
 A Website Owner can create content inside their own website from the Content section in the Umbraco backoffice. To do this, position the mouse over the name of the content node in the content tree to which you wish to add any children. A three-dot icon will appear to the right of the node name. If click on it, you will get a menu with a list of possible nodes that are allowed under the specific node. Just click on the one you want to create and fill in the name and the rest of fields. Once you are done, you can click on the "Save and publish" button on the bottom right corner of the screen. If you would like to save your changes, but don't want to make the content publicly available, you can click on the "Save" button instead.
@@ -36,8 +40,16 @@ The CovidSupport project offers a public RESTful API to retrieve the resources s
 
 ### URLs
 
-Each website stored on the server has a unique URL such as **{domain}/api/v1**. For instance, if we are trying to get the resources from the site covidsupport.vizioztest.site,
-the URL would be **https://covidsupport.vizioztest.site/api/v1/**. Please make sure you use the right **http** or **https** protocol to access the API.
+Each website stored on the server has a unique URL such as **{domain}/api/v1**. For instance, if we are trying to get the resources from the site nccovid.vizioz.com,
+the URL would be **https://nccovid.vizioz.com/api/v1/**. Please make sure you use the right **http** or **https** protocol to access the API.
+
+#### Multilingual URLs
+
+Please note that sites that are multilingual will use a different URL to retrieve content for each language, corresponding to the domain defined for each language. For instance:
+
+- **https://nccovid.vizioz.com/api/v1/** (English)
+- **https://nccovid.vizioz.com/es/api/v1/** (Spanish)
+
 
 ### Public access
 
@@ -60,7 +72,6 @@ It returns a list of the available resource categories (i.e. Restaurants, Farms 
 Parameter	| Type | Description
 --|--|--  
 categories | Array of Category elements | The list of availabe categories, organized in a hierarchical tree structure of categories and subcategories. Each Category element
-regions | Array of strings | The list of regions.
 
 - _Category_
 
@@ -75,7 +86,7 @@ regions | Array of strings | The list of regions.
 
 ```JSON
 {
-	"categories": [
+  "categories": [
     {
       "code": "food",
       "id": 1001,
@@ -98,76 +109,8 @@ regions | Array of strings | The list of regions.
       "id": 1004,
       "name": "Farms & Farm Markets"
     }
-  ],
-  "regions": [
-    "Orange"
   ]
 }
-```
-
-### Get All
-
-``GET /api/v1/resource/getall ``
-
-It returns the list of all published resources.
-
-**Response**
-
-An array of ResourceListItem elements.
-
-A ResourceListItem element contains only basic information about the resource.
-
-- _ResourceListItem_
-
-  Parameter	| Type | Description
-  --|--|--  
-  address | String | The address of the resource. This field usually contains only the street and street number.
-  city | String | The city where the resource is at.
-  description | String | An optional short description of the resource assets, for instace, the type of cuisine.
-  id | Integer | The ID of the resource.
-  lat | Decimal | The geographical latitude.
-  lon | Decimal | The geographical longitude.
-  options | Array of String | All the options that are available for the resource, i.e. "delivery", "orderOnline", etc.
-  providerName | String | The resource name.
-  region | String | The region the resource is at.
-  state | String | The code of the state, i.e. "NC".
-  zip | String | The ZIP code of the address.
-
-**Example of a JSON Response**
-
-```JSON
-[
-  {
-    "address": "1130 Blissenbach Ln",
-    "city": "Chapel Hill",
-    "description": null,
-    "id": 2001,
-    "lat": 35.911326,
-    "lon": -79.218949,
-    "options": [
-      "orderOnline", "payOnline", "mustPreorder", "farmPickup", "delivery"
-    ],
-    "providerName": "Beechcrest Farm",
-    "region": "Orange",
-    "state": "NC",
-    "zip": "27516"
-  },
-  {
-    "address": "4115 Garret Dr",
-    "city": "Durham",
-    "description": null,
-    "id": 2002,
-    "lat": 36.011597,
-    "lon": -79.027342,
-    "options": [
-      "orderOnline", "payOnline", "mustPreorder", "farmPickup", "delivery"
-    ],
-    "providerName": "Red's Quality Acre",
-    "region": "Orange",
-    "state": "NC",
-    "zip": "27705"
-  }
-]
 ```
 
 ### Get
@@ -182,107 +125,279 @@ A single Resource element.
 
 A resource element contains all the available information about the resource.
 
+The resources returned by the API might be of different types (according to their category), so some resources might contain different properties or parameters. 
+
+Below are detailed the two types of resource currently returned by the API. The parameters marked as bold in the list below are common to all types of resources.
+
 - _Resource_
 
+  Parameter	| Type | Description | Common to all resources
+  --|--|--|--
+  **address** | String | The address of the resource. This field usually contains only the street and street number. | YES
+  **category** | String | The category of the resource. | YES
+  **city** | String | The city where the resource is at. | YES
+  **contact** | String | The main contact telephone number. | YES
+  contactSpanish | String | The telephone number for Spanish-speaking customers. |
+  **description** | String | An optional short description of the resource assets, for instace, the type of cuisine. | YES
+  **email** | String | The contact email address. | YES
+  **facebook** | String | The Facebook page URL for the resource. | YES
+  **free** | Boolean | It indicates whether the resource services are offered free of charge. | YES
+  **id** | Integer | The ID of the resource. | YES
+  **instagram** | String | The Instagram username for the resource. | YES
+  instructions | String | Optional instruction. |
+  lat | Decimal | The geographical latitude. | 
+  lon | Decimal | The geographical longitude. | 
+  notes | String | Optional extra notes. |
+  offers | String | Optional offers. |
+  options | Array[String] | All the options that are available for the resource, i.e. "delivery", "orderOnline", etc. |
+  providerAddLoc | String | Provider's secondary name. For example, for school meals this could be the local county department. |
+  **name** | String | The resource name. | YES
+  **openHours** | Array[OpeningTimes] | The opening hours of the resource, as an array of OpenHour object for each day of the week. | YES
+  **region** | Array[String] | The region/county the resource is at, or the region(s) where it provides its services. | YES 
+  specialHours | Array[OpeningTimes] | The special opening hours of the resource, as an array of OpenHour object for each day of the week. | 
+  **state** | String | The code of the state, i.e. "NC". | YES
+  **twitter** | String | The Twitter username for the resource. | YES
+  **webLink** | String | The URL of the resource's website. | YES
+  **zip** | String | The ZIP code of the address. | YES
+
+- _SocialServiceResource_
+
+  Parameter	| Type | Description | Common to all resources
+  --|--|--|--
+  acceptsMedicaid | Boolean | It indicates whether it accetps patients using MedicAid insurance. | 
+  acceptsMedicare | Boolean | It indicates whether it accepts patients using MediCare insurance | 
+  acceptsUninsuredPatients | Boolean | It indicates whether it accepts uninsured patients. | 
+  **address** | String | The address of the resource. This field usually contains only the street and street number. | YES
+  **category** | String | The category of the resource. | YES
+  afterHoursPhone | String | Optional after-hour phone number. | 
+  afterHoursPhoneInstructions | String | Specific instructions for using the after-hours phone number. | 
+  **city** | String | The city where the resource is at. | YES
+  **contact** | String | The main contact telephone number. | YES
+  crisisPhone | String | Optional phone number for crisis or emergency situations. | 
+  crisisPhoneInstructions | String | Specific instructions for using the crisis phone number. | 
+  **description** | String | An optional short description of the resource assets. | YES
+  eligibility | String | The eligibility of the service. | 
+  **email** | String | The contact email address. | YES
+  **facebook** | String | The Facebook page URL for the resource. | YES
+  **free** | Boolean | It indicates whether the resource services are offered free of charge. | YES
+  resourceAccessNotes | String | Instructions about how to gain access to this resource. | 
+  **id** | Integer | The ID of the resource. | YES
+  **instagram** | String | The Instagram username for the resource. | YES
+  geographicalRestrictions | String | Optional field indicating any additional restrictions beyond the service regions | 
+  holidayOpeningTimes | String | The opening times during holidays. | 
+  languagePhones | Array[LanguagePhone] | Alternative phone numbers for different languages. | 
+  languagesSupported | Array[String] | A list of the languages supported by the service | 
+  lowCost | Boolean | It indicates whether it is a low cost service. | 
+  **name** | String | The resource name. | YES
+  **openHours** | Array[OpeningTimes] | The opening hours of the resource, as an array of OpenHour object for each day of the week. | YES
+  **region** | Array[String] | The region/county the resource is at, or the region(s) where it provides its services. | YES 
+  serviceProviderName | String | The name of the service provider. | 
+  specialHoursOpeningTimes | String | The special opening hours. | 
+  status | String | The status of the service during COVID, regarding the opening hours. | 
+  resourceAccessNotes | String | Instructions about how to gain access to this resource. | 
+  safeForUndocumentedIndividuals | Boolean | It indicates whether the resource services are safe for undocumented individuals. | 
+  **state** | String | The code of the state, i.e. "NC". | YES
+  tags | Array[String] | The list of tags or categories for the service. | 
+  **twitter** | String | The Twitter username for the resource. | YES
+  **webLink** | String | The URL of the resource's website. | YES
+  **zip** | String | The ZIP code of the address. | YES
+
+  - _OpeningTimes_
+
   Parameter	| Type | Description
-  --|--|--  
-  address | String | The address of the resource. This field usually contains only the street and street number.
-  city | String | The city where the resource is at.
-  contact | String | The main telephone number.
-  contactSpanish | String | The telephone number for Spanish-speaking customers.
-  description | String | An optional short description of the resource assets, for instace, the type of cuisine.
-  email | String | The contact email address.
-  facebook | String | The Facebook page URL for the resource.
-  free | Boolean | It indicates whether the resource services are offered free of charge.
-  id | Integer | The ID of the resource.
-  instagram | String | The Instagram username for the resource.
-  instructions | String | Optional instruction.
-  notes | String | Optional extra notes.
-  offers | String | Optional offers.
-  lat | Decimal | The geographical latitude.
-  lon | Decimal | The geographical longitude.
-  options | Array of String | All the options that are available for the resource, i.e. "delivery", "orderOnline", etc.
-  providerAddLoc | String | Provider's secondary name. For example, for school meals this could be the local county department.
-  providerName | String | The resource name.
-  region | String | The region/county the resource is at.
-  state | String | The code of the state, i.e. "NC".
-  twitter | String | The Twitter username for the resource.
-  webLink | String | The URL of the resource's website.
-  zip | String | The ZIP code of the address.
-  monday | String | Monday opening hours.
-  tuesday | String | Tuesday opening hours.
-  wednesday | String | Wednesday opening hours.
-  thursday | String | Thursday opening hours.
-  friday | String | Friday opening hours.
-  saturday | String | Saturday opening hours.
-  sunday | String | Sunday opening hours.
-  spMonday | String | Monday opening hours for senior shopping.
-  spTuesday | String | Tuesday opening hours for senior shopping.
-  spWednesday | String | Wednesday opening hours for senior shopping.
-  spThursday | String | Thursday opening hours for senior shopping.
-  spFriday | String | Friday opening hours for senior shopping.
-  spSaturday | String | Saturday opening hours for senior shopping.
-  spSunday | String | Sunday opening hours for senior shopping.
+  --|--|--
+  day | String | The name of the day of the week.
+  hours | Array[StartEndTime] | An array of multiple values or periods of time during the day, each one containing a start and and end time.
+
+  - _StartEndTime_
+
+  Parameter	| Type | Description
+  --|--|--
+  startTime | String | The start time, if any, of a period of the day.
+  endTime | String | The end time, if any, of a period of the day.
+
+  - LanguagePhone
+
+  Parameter	| Type | Description
+  --|--|--
+  language | String | The name of the language.
+  phoneNumber | String | The phone number for the specific language.
 
 **Example of a JSON Response**
 
 ```JSON
 {
-  "address": "1130 Blissenbach Ln",
+  "address": "123 Farm Ln",
+  "category": "Farm",
   "city": "Chapel Hill",
   "contact": "919-000-0000",
   "contactSpanish": null,
   "description": null,
   "email": "email@mail.com",
-  "facebook": "https://www.facebook.com/Beechcrest-Farm-123",
+  "facebook": "https://www.facebook.com/farm",
   "free": false,
-  "friday": "9:00 AM-5:00 PM",
   "id": 2001,
-  "instagram": "BeechcrestFarm",
+  "instagram": "farm",
   "instructions": null,
   "lat": 35.911326,
   "lon": -79.218949,
-  "monday": "9:00 AM-5:00 PM",
+  "name": "Farm",
   "notes": null,
   "offers": null,
+  "openHours": [
+    { 
+      "day": "monday", 
+      "hours": [ 
+        {"startTime": "08:00:00", "endTime": "14:00:00"},
+        {"startTime": "16:00:00", "endTime": "20:00:00"}
+      ]
+    },
+    { 
+      "day": "tuesday", 
+      "hours": [ 
+        {"startTime": "08:00:00", "endTime": "14:00:00"},
+        {"startTime": "16:00:00", "endTime": "20:00:00"}
+      ]
+    },
+    { 
+      "day": "wednesday", 
+      "hours": [ 
+        {"startTime": "08:00:00", "endTime": "14:00:00"},
+        {"startTime": "16:00:00", "endTime": "20:00:00"}
+      ]
+    },
+    { 
+      "day": "thursday", 
+      "hours": [ 
+        {"startTime": "08:00:00", "endTime": "14:00:00"},
+        {"startTime": "16:00:00", "endTime": "20:00:00"}
+      ]
+    },
+    { 
+      "day": "friday", 
+      "hours": [ 
+        {"startTime": "08:00:00", "endTime": "14:00:00"},
+        {"startTime": "16:00:00", "endTime": "20:00:00"}
+      ]
+    },
+    { 
+      "day": "saturday", 
+      "hours": [ 
+        {"startTime": "12:00:00", "endTime": "16:00:00"}
+      ]
+    }
+  ],
   "options": [
     "orderOnline", "payOnline", "mustPreorder", "farmPickup", "delivery"
   ],
   "providerAddLoc": null,
-  "providerName": "Beechcrest Farm",
-  "region": "Orange",
-  "saturday": "9:00 AM-5:00 PM",
-  "spFriday": "9:00 AM-5:00 PM",
-  "spMonday": "9:00 AM-5:00 PM",
-  "spSaturday": "9:00 AM-5:00 PM",
-  "spSunday": "9:00 AM-5:00 PM",
-  "spThursday": "9:00 AM-5:00 PM",
-  "spTuesday": "9:00 AM-5:00 PM",
-  "spWednesday": "9:00 AM-5:00 PM",
+  "region": ["Orange"],
+  "specialHours": [],
   "state": "NC",
-  "sunday": "9:00 AM-5:00 PM",
-  "thursday": "9:00 AM-5:00 PM",
-  "tuesday": "9:00 AM-5:00 PM",
-  "twitter": "BeechcrestFarm",
-  "webLink": "https://beechcrestfarm.com",
-  "wednesday": "9:00 AM-5:00 PM",
+  "twitter": "farm",
+  "webLink": "https://www.website.com",
   "zip": "27516"
 }
 ```
 
 ### Get By Category
 
-``GET /api/v1/resource/getbycategory/{categoryCode} ``
+``GET /api/v1/resource/getbycategory/{categoryId} ``
 
 It returns the list of all published resources under a specific category in the category tree.
 
 **Response**
 
-An array of Resource elements.
+An array of ResourceListItem elements.
+
+A ResourceListItem element contains only basic information about the resource.
+
+The resources returned by the API might be of different types (according to their category), so some resources might contain different properties or parameters. 
+
+Below are detailed the two types of resource currently returned by the API. The parameters marked as bold in the list below are common to all types of resources.
+
+- _ResourceListItem_
+
+  Parameter	| Type | Description | Common to all resources
+  --|--|--|--
+  **address** | String | The address of the resource. This field usually contains only the street and street number. | YES
+  **category** | String | The category of the resource. | YES
+  **city** | String | The city where the resource is at. | YES
+  **description** | String | An optional short description of the resource assets, for instace, the type of cuisine. | YES
+  **id** | Integer | The ID of the resource. | YES
+  lat | Decimal | The geographical latitude. | 
+  lon | Decimal | The geographical longitude. | 
+  **name** | String | The resource name. | YES
+  options | Array[String] | All the options that are available for the resource, i.e. "delivery", "orderOnline", etc. |
+  **region** | Array[String] | The region/county the resource is at, or the region(s) where it provides its services. | YES 
+  **state** | String | The code of the state, i.e. "NC". | YES
+  **zip** | String | The ZIP code of the address. | YES
+
+- _SocialServiceResourceListItem_
+
+  Parameter	| Type | Description | Common to all resources
+  --|--|--|--
+  **address** | String | The address of the resource. This field usually contains only the street and street number. | YES
+  **category** | String | The category of the resource. | YES
+  **city** | String | The city where the resource is at. | YES
+  **description** | String | An optional short description of the resource assets, for instace, the type of cuisine. | YES
+  **id** | Integer | The ID of the resource. | YES
+  **name** | String | The resource name. | YES
+  **region** | Array[String] | The region/county the resource is at, or the region(s) where it provides its services. | YES 
+  **state** | String | The code of the state, i.e. "NC". | YES
+  tags | Array[String] | The list of tags or categories for the service. |
+  **zip** | String | The ZIP code of the address. | YES
 
 **Example of a JSON Response**
 
-_See JSON response for **Get All**_
+```JSON
+[
+  {
+    "address": "123 Farm Ln",
+    "category": "Farm",
+    "city": "Chapel Hill",
+    "description": null,
+    "id": 2001,
+    "lat": 35.911326,
+    "lon": -79.218949,
+    "name": "Farm",
+    "options": [
+      "orderOnline", "payOnline", "mustPreorder", "farmPickup", "delivery"
+    ],
+    "region": "Orange",
+    "state": "NC",
+    "zip": "27516"
+  },
+  {
+    "address": "123 Fake Dr",
+    "category": "Farm",
+    "city": "Durham",
+    "description": null,
+    "id": 2002,
+    "lat": 36.011597,
+    "lon": -79.027342,
+    "name": "Farm 2",
+    "options": [
+      "mustPreorder", "farmPickup", "delivery"
+    ],
+    "region": "Orange",
+    "state": "NC",
+    "zip": "27705"
+  }
+]
+```
+
+### Get By Region
+
+``GET /api/v1/resource/getbyregion/{regionId} ``
+
+It returns the list of all published resources that are located or serve a specific region.
+
+**Response**
+
+An array of ResourceListItem elements.
+
+_See Response for **Get By Category**_
 
 ## Resource indexes
 

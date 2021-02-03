@@ -1,17 +1,11 @@
-﻿using CovidSupport.Api.Interfaces;
-
+﻿
 namespace CovidSupport.Api.Models
 {
-    public class ResourceListItem : IResourceItem
+    public class ResourceListItem : IResourceItemBase
     {
-        public ResourceListItem()
-        {
-            this.Options = new string[] { };
-        }
-
         public int Id { get; set; }
 
-        public string ProviderName { get; set; }
+        public string Name { get; set; }
 
         public string Description { get; set; }
 
@@ -23,12 +17,14 @@ namespace CovidSupport.Api.Models
 
         public string Zip { get; set; }
 
-        public string Region { get; set; }
+        public string[] Region { get; set; }
+
+        public string Category { get; set; }
+
+        public string[] Options { get; set; }
 
         public double? Lat { get; set; }
 
-        public double? Lon { get; set; }
-
-        public string[] Options { get; set; }
+        public double? Lon { get; set; }        
     }
 }
