@@ -1,18 +1,12 @@
 ﻿using System.Collections.Generic;
-using CovidSupport.Api.Interfaces;
 
 namespace CovidSupport.Api.Models
 {
     public class Resource : IResourceItem
     {
-        public Resource()
-        {
-            this.Options = new string[] { };
-        }
-
         public int Id { get; set; }
 
-        public string ProviderName { get; set; }
+        public string Name { get; set; }
 
         public string Description { get; set; }
 
@@ -24,25 +18,13 @@ namespace CovidSupport.Api.Models
 
         public string Zip { get; set; }
 
-        public string Region { get; set; }
+        public string[] Region { get; set; }
 
-        public double? Lat { get; set; }
-
-        public double? Lon { get; set; }
-
-        public string[] Options { get; set; }
-
-        public bool Free { get; set; }
-
-        public string ProviderAddLoc { get; set; }
+        public string Category { get; set; }
 
         public List<OpeningTimes> OpenHours { get; set; }
 
-        public List<OpeningTimes> SpecialHours { get; set; }
-        
         public string Contact { get; set; }
-
-        public string ContactSpanish { get; set; }
 
         public string Email { get; set; }
 
@@ -53,6 +35,20 @@ namespace CovidSupport.Api.Models
         public string Instagram { get; set; }
 
         public string Facebook { get; set; }
+
+        public bool Free { get; set; }
+
+        public string[] Options { get; set; }
+
+        public double? Lat { get; set; }
+
+        public double? Lon { get; set; }
+
+        public string ProviderAddLoc { get; set; }
+
+        public List<OpeningTimes> SpecialHours { get; set; }
+        
+        public string ContactSpanish { get; set; }
 
         public string Instructions { get; set; }
 

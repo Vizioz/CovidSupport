@@ -4,11 +4,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
+using CovidSupport.Api.Factories;
 using CovidSupport.Api.Models;
 using Examine;
 using Examine.LuceneEngine.Search;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Umbraco.Core;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 
@@ -16,6 +17,10 @@ namespace CovidSupport.Api.Controllers
 {
     public class ResourceController : BaseApiController
     {
+        public ResourceController (IVariationContextAccessor variationContextAccessor) : base(variationContextAccessor)
+        {
+        }
+
         [HttpGet]
         public HttpResponseMessage Settings()
         {
@@ -24,10 +29,10 @@ namespace CovidSupport.Api.Controllers
                 var settings = new ResourceSettings
                 {
                     Categories = this.GetCategories(),
-                    Regions = this.GetRegions()
+                    Regions = null
                 };
 
-                return this.Request.CreateResponse(HttpStatusCode.Accepted, settings, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.Accepted, settings);
             }
             catch (ApiNotFoundException e)
             {
@@ -35,7 +40,7 @@ namespace CovidSupport.Api.Controllers
             }
             catch (Exception e)
             {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
             }
         }
 
@@ -65,21 +70,21 @@ namespace CovidSupport.Api.Controllers
         {
             try
             {
-                IEnumerable<ResourceListItem> items = new List<ResourceListItem>();
+                IEnumerable<IResourceItemBase> items;
                 var categories = this.GetCategories();
                 var category = this.FindInCategoryTree(categories, id);
 
                 if (category != null)
                 {
                     var results = this.Index.GetSearcher().CreateQuery("content").Field("parentID", category.Id.ToString()).Execute();
-                    items = results.Select(this.BuildResourceListItem);
+                    items = this.BuildResourceList(results).ToList();
                 }
                 else
                 {
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Category not found.");
                 }
                 
-                return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.Accepted, items);
             }
             catch (ApiNotFoundException e)
             {
@@ -87,7 +92,7 @@ namespace CovidSupport.Api.Controllers
             }
             catch (Exception e)
             {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
             }
         }
 
@@ -96,7 +101,7 @@ namespace CovidSupport.Api.Controllers
         {
             try
             {
-                IEnumerable<ResourceListItem> items;
+                IEnumerable<IResourceItemBase> items;
 
                 var regionNode = int.TryParse(id, out int intId)
                     ? this.Website.DescendantOfType("regions").FirstChild(x => x.Id == intId)
@@ -112,14 +117,14 @@ namespace CovidSupport.Api.Controllers
                     var val = "*" + regionNode.Key.ToString().Replace("-", string.Empty);
                     var results = query.Field("region", val.MultipleCharacterWildcard()).Execute();
 
-                    items = results.Select(this.BuildResourceListItem);
+                    items = this.BuildResourceList(results);
                 }
                 else
                 {
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Region not found.");
                 }
 
-                return this.Request.CreateResponse(HttpStatusCode.OK, items, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.OK, items);
             }
             catch (ApiNotFoundException e)
             {
@@ -127,7 +132,7 @@ namespace CovidSupport.Api.Controllers
             }
             catch (Exception e)
             {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
             }
         }
         
@@ -140,9 +145,9 @@ namespace CovidSupport.Api.Controllers
 
                 if (result != null)
                 {
-                    var item = this.BuildResourceItem(result);
+                    var item = this.BuildResource(result);
 
-                    return this.Request.CreateResponse(HttpStatusCode.Accepted, item, this.FormatterConfiguration);
+                    return this.Request.CreateResponse(HttpStatusCode.Accepted, item);
                 }
                 else
                 {
@@ -155,7 +160,7 @@ namespace CovidSupport.Api.Controllers
             }
             catch (Exception e)
             {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
             }
         }
 
@@ -163,7 +168,7 @@ namespace CovidSupport.Api.Controllers
         {
             var resourcesNode = this.Website.FirstChildOfType("communityResources");
 
-            return resourcesNode.Children.Select(this.GetCategory);
+            return resourcesNode.Children().Select(this.GetCategory);
         }
 
         private ResourceCategory FindInCategoryTree(IEnumerable<ResourceCategory> categories, int id)
@@ -216,191 +221,37 @@ namespace CovidSupport.Api.Controllers
 
             if (!isContainer)
             {
-                category.Subcategories = content.Children.Select(this.GetCategory);
+                var subcategories = content.Children().Select(this.GetCategory);
+                category.Subcategories = subcategories.Any() ? subcategories : null;;
             }
 
             return category;
         }
 
-        private ResourceListItem BuildResourceListItem(ISearchResult searchResult)
+        private IResourceItem BuildResource(ISearchResult searchResult)
         {
-            int.TryParse(searchResult.Id, out int id);
-            var providerName = searchResult.GetValues("providerName").FirstOrDefault();
-            var description = searchResult.GetValues("cuisine").FirstOrDefault();
-            var address = searchResult.GetValues("address").FirstOrDefault();
-            var city = searchResult.GetValues("city").FirstOrDefault();
-            var stateList = searchResult.GetValues("state").FirstOrDefault();
-            var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[]{};
-            var zip = searchResult.GetValues("zip").FirstOrDefault();
-            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
-            var map = searchResult.GetValues("map").FirstOrDefault();
-            var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
+            var resourceType = searchResult.GetValues("__NodeTypeAlias").FirstOrDefault();
+            var item = ResourceFactoryProvider.GetResourceFactory(resourceType, this.Umbraco, this.CultureName).BuildResource(searchResult);
 
-            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
-
-            return new ResourceListItem
-            {
-                Id = id,
-                ProviderName = providerName,
-                Description = description,
-                Address = address,
-                City = city,
-                State = state.Length > 0 ? state[0] : null,
-                Zip = zip,
-                Region = string.Join(",", region),
-                Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
-                Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
-                Options = options
-            };
+            return item;
         }
 
-        private Resource BuildResourceItem(ISearchResult searchResult)
+        private IEnumerable<IResourceItemBase> BuildResourceList(ISearchResults searchResults)
         {
-            // Base properties
-            int.TryParse(searchResult.Id, out int id);
-            var providerName = searchResult.GetValues("providerName").FirstOrDefault();
-            var description = searchResult.GetValues("cuisine").FirstOrDefault();
-            var address = searchResult.GetValues("address").FirstOrDefault();
-            var city = searchResult.GetValues("city").FirstOrDefault();
-            var stateList = searchResult.GetValues("state").FirstOrDefault();
-            var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
-            var zip = searchResult.GetValues("zip").FirstOrDefault();
-            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
-            var map = searchResult.GetValues("map").FirstOrDefault();
-            var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
-            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
+            var items = new List<IResourceItemBase>();
+            var groupedResults = searchResults.GroupBy(GetProviderName);
 
-            // Provider
-            var providerAddLoc = searchResult.GetValues("providerAddLoc").FirstOrDefault();
-            var free = searchResult.GetValues("map").FirstOrDefault() == "1";
-
-            // Opening Hours
-            var openingHours = new List<OpeningTimes>
+            foreach (var group in groupedResults)
             {
-                this.GetDayOpeningTimes("monday", searchResult.GetValues("monday").FirstOrDefault()),
-                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("tuesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("wednesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("thursday", searchResult.GetValues("thursday").FirstOrDefault()),
-                this.GetDayOpeningTimes("friday", searchResult.GetValues("friday").FirstOrDefault()),
-                this.GetDayOpeningTimes("saturday", searchResult.GetValues("saturday").FirstOrDefault()),
-                this.GetDayOpeningTimes("sunday", searchResult.GetValues("sunday").FirstOrDefault())
-            };
-            openingHours = openingHours.Where(x => x.Hours.Any()).ToList();
+                items.AddRange(ResourceFactoryProvider.GetResourceFactory(group.Key, this.Umbraco, this.CultureName).BuildResourcesList(group.AsEnumerable()));
+            }
 
-            // Special opening Hours
-            var specialHours = new List<OpeningTimes>
-            {
-                this.GetDayOpeningTimes("monday", searchResult.GetValues("spMonday").FirstOrDefault()),
-                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("spTuesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("spWednesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("thursday", searchResult.GetValues("spThursday").FirstOrDefault()),
-                this.GetDayOpeningTimes("friday", searchResult.GetValues("spFriday").FirstOrDefault()),
-                this.GetDayOpeningTimes("saturday", searchResult.GetValues("spSaturday").FirstOrDefault()),
-                this.GetDayOpeningTimes("sunday", searchResult.GetValues("spSunday").FirstOrDefault())
-            };
-            specialHours = specialHours.Where(x => x.Hours.Any()).ToList();
-
-            // Contact
-            var contact = searchResult.GetValues("contact").FirstOrDefault();
-            var contactSpanish = searchResult.GetValues("contactSpanish").FirstOrDefault();
-            var email = searchResult.GetValues("email").FirstOrDefault();
-            var webLink = searchResult.GetValues("webLink").FirstOrDefault();
-            var twitter = searchResult.GetValues("twitter").FirstOrDefault();
-            var instagram = searchResult.GetValues("instagram").FirstOrDefault();
-            var facebook = searchResult.GetValues("facebook").FirstOrDefault();
-            
-            // Instructions
-            var instructions = searchResult.GetValues("instructions").FirstOrDefault();
-            var offers = searchResult.GetValues("offers").FirstOrDefault();
-            var notes = searchResult.GetValues("notes").FirstOrDefault();
-
-            return new Resource
-            {
-                Id = id,
-                ProviderName = providerName,
-                Description = description,
-                Address = address,
-                City = city,
-                State = state.Length > 0 ? state[0] : null,
-                Zip = zip,
-                Region = string.Join(",", region),
-                Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
-                Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
-                Options = options,
-                ProviderAddLoc = providerAddLoc,
-                Free = free,
-                OpenHours = openingHours,
-                SpecialHours = specialHours,
-                Contact = contact,
-                ContactSpanish = contactSpanish,
-                Email = email,
-                WebLink = webLink,
-                Twitter = twitter,
-                Instagram = instagram,
-                Facebook = facebook,
-                Instructions = instructions,
-                Offers = offers,
-                Notes = notes
-            };
+            return items;
         }
 
-        private OpeningTimes GetDayOpeningTimes(string day, string str)
+        private string GetProviderName(ISearchResult result)
         {
-            var openingTimes = new OpeningTimes(day);
-
-            if (string.IsNullOrEmpty(str))
-            {
-                return openingTimes;
-            }
-
-            try
-            {
-                var hours = new List<StartEndTime>();
-                var openingHoursArray = JsonConvert.DeserializeObject<JArray>(str);//.FirstOrDefault();
-
-                foreach (var openingHoursVal in openingHoursArray)
-                {
-                    var startTime = openingHoursVal.Value<DateTime?>("startTime");
-                    var endTime = openingHoursVal.Value<DateTime?>("endTime");
-
-                    if (startTime != null || endTime != null)
-                    {
-                        var startEndTime = new StartEndTime();
-
-                        if (startTime != null)
-                        {
-                            startEndTime.StarTime = ((DateTime)startTime).ToString("HH:mm:ss");
-                        }
-
-                        if (endTime != null)
-                        {
-                            startEndTime.EndTime = ((DateTime)endTime).ToString("HH:mm:ss");
-                        }
-
-                        hours.Add(startEndTime);
-                    }
-                }
-
-                openingTimes.Hours = hours;
-            }
-            catch (Exception)
-            {
-                return openingTimes;
-            }
-
-            return openingTimes;
-        }
-
-        private string[] GetNodesName(string str)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
-                return new string[] { };
-            }
-
-            var ids = str.Split(',');
-
-            return ids.Select(id => this.Umbraco.Content(id)).Where(x => x != null).Select(x => x.Name).ToArray();
+            return ResourceFactoryProvider.GetResourceFactoryName(result.GetValues("__NodeTypeAlias").FirstOrDefault());
         }
     }
 }

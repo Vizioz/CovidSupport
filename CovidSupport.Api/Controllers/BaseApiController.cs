@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Globalization;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
+using System.Web.Http.Cors;
 using CovidSupport.Api.Constants;
 using Examine;
 using Newtonsoft.Json;
@@ -25,10 +29,15 @@ namespace CovidSupport.Api.Controllers
         protected string ResourcesIndexName { get; private set; }
 
         protected IIndex Index { get; private set; }
-
-        protected HttpConfiguration FormatterConfiguration { get; private set; }
-        
+                
         protected ISearcher Searcher => this.Index.GetSearcher();
+
+        protected readonly IVariationContextAccessor _variationContextAccessor;
+
+        protected BaseApiController(IVariationContextAccessor variationContextAccessor)
+        {
+            _variationContextAccessor = variationContextAccessor;
+        }
 
         protected override void Initialize(HttpControllerContext controllerContext)
         {
@@ -54,6 +63,7 @@ namespace CovidSupport.Api.Controllers
                 }
             }
 
+            var d = this.Services.DomainService.GetAll(true);
             var domain = this.Services.DomainService.GetAll(true)
                 .FirstOrDefault(x => string.Equals(this.TrimDomainName(x.DomainName), apiUrl, StringComparison.InvariantCultureIgnoreCase));
 
@@ -64,6 +74,10 @@ namespace CovidSupport.Api.Controllers
 
             this.WebsiteUrl = apiUrl;
             this.CultureName = domain.LanguageIsoCode.ToLowerInvariant();
+
+            Thread.CurrentThread.CurrentCulture = new CultureInfo(this.CultureName);
+            Thread.CurrentThread.CurrentUICulture = new CultureInfo(this.CultureName);
+            _variationContextAccessor.VariationContext = new VariationContext(this.CultureName);
 
             var websiteId = domain.RootContentId ?? (int)default;
             var website = this.Umbraco.Content(websiteId);
@@ -84,12 +98,14 @@ namespace CovidSupport.Api.Controllers
 
         private void SetConfiguration()
         {
-            HttpConfiguration config = new HttpConfiguration();
-            config.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
-            config.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
-            config.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-            config.Formatters.JsonFormatter.UseDataContractJsonSerializer = false;
-            this.FormatterConfiguration = config;
+            this.Configuration.Formatters.JsonFormatter.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            this.Configuration.Formatters.JsonFormatter.SerializerSettings.Converters.Add(new StringEnumConverter());
+            this.Configuration.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+            this.Configuration.Formatters.JsonFormatter.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;            
+            this.Configuration.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"));
+
+            //this.Configuration.Formatters.JsonFormatter.UseDataContractJsonSerializer = true;
+            //this.Configuration.Formatters.Remove(GlobalConfiguration.Configuration.Formatters.XmlFormatter);
         }
 
         private string TrimDomainName(string domain)
