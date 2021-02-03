@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title></title>
+    @*<title></title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
           integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
           crossorigin=""/>
@@ -16,10 +16,10 @@
     
     <style>
         #mapid { height: 180px; }
-    </style>
+    </style>*@
 </head>
 <body>
-    <div></div>
+    @*<div></div>
     <div id="mapid"></div>
 <script type="text/javascript">
     var mymap = L.map('mapid').setView([35.929903, -79.026481], 13);
@@ -42,6 +42,6 @@
     };
     xhttp.open("GET", "https://localhost:44320/api/v1/resource/getbyregion/1304", true);
     xhttp.send();
-</script>
+</script>*@
 </body>
 </html>
