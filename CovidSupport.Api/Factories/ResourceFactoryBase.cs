@@ -13,6 +13,8 @@ namespace CovidSupport.Api.Factories
     {
         private UmbracoHelper helper;
 
+        private string defaultCulture = "en_US";
+
         protected string Culture;
 
         protected ResourceFactoryBase(UmbracoHelper umbracoHelper, string culture)
@@ -104,6 +106,33 @@ namespace CovidSupport.Api.Factories
             }
 
             return this.helper.Content(id)?.Name;
+        }
+
+        protected string GetResultValue (ISearchResult searchResult, string property)
+        {
+            return searchResult.GetValues(property).FirstOrDefault();
+        }
+
+        protected bool GetResultBooleanValue(ISearchResult searchResult, string property)
+        {
+            return searchResult.GetValues(property).FirstOrDefault() == "1";
+        }
+
+        protected string GetResultCultureValueWithFallback(ISearchResult searchResult, string property)
+        {
+            var retVal = searchResult.GetValues(property + "_" + this.Culture).FirstOrDefault();
+
+            if (retVal == null && this.Culture != defaultCulture)
+            {
+                retVal = searchResult.GetValues(property + "_" + defaultCulture).FirstOrDefault();
+            }
+
+            if (retVal == null && this.Culture != defaultCulture)
+            {
+                retVal = this.GetResultValue(searchResult, property);
+            }
+
+            return retVal;
         }
     }
 }
