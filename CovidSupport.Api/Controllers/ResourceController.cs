@@ -164,6 +164,120 @@ namespace CovidSupport.Api.Controllers
             }
         }
 
+        [HttpGet]
+        public HttpResponseMessage GetByTag(int tagId)
+        {
+            try
+            {
+                IEnumerable<IResourceItemBase> items;
+
+                var tagNode = this.Website.DescendantOfType("resourceTags").FirstChild(x => x.Id == tagId);
+
+                if (tagNode != null)
+                {
+                    var searcher = this.Index.GetSearcher();
+
+                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+                    query.QueryParser.AllowLeadingWildcard = true;
+
+                    var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
+                    var results = query.Field("tags", val.MultipleCharacterWildcard()).Execute();
+
+                    items = this.BuildResourceList(results);
+                }
+                else
+                {
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource tag not found.");
+                }
+
+                return this.Request.CreateResponse(HttpStatusCode.OK, items);
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
+            catch (Exception e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+            }
+        }
+
+        [HttpGet]
+        public HttpResponseMessage GetByPopulation(int id)
+        {
+            try
+            {
+                IEnumerable<IResourceItemBase> items;
+
+                var tagNode = this.Website.DescendantOfType("populationTypes").FirstChild(x => x.Id == id);
+
+                if (tagNode != null)
+                {
+                    var searcher = this.Index.GetSearcher();
+
+                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+                    query.QueryParser.AllowLeadingWildcard = true;
+
+                    var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
+                    var results = query.Field("populationsServed", val.MultipleCharacterWildcard()).Execute();
+
+                    items = this.BuildResourceList(results);
+                }
+                else
+                {
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Population type not found.");
+                }
+
+                return this.Request.CreateResponse(HttpStatusCode.OK, items);
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
+            catch (Exception e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+            }
+        }
+
+        [HttpGet]
+        public HttpResponseMessage GetByLanguageServed(int id)
+        {
+            try
+            {
+                IEnumerable<IResourceItemBase> items;
+
+                var tagNode = this.Website.DescendantOfType("languages").FirstChild(x => x.Id == id);
+
+                if (tagNode != null)
+                {
+                    var searcher = this.Index.GetSearcher();
+
+                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+                    query.QueryParser.AllowLeadingWildcard = true;
+
+                    var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
+                    var results = query.Field("populationsServed", val.MultipleCharacterWildcard()).Execute();
+
+                    items = this.BuildResourceList(results);
+                }
+                else
+                {
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Language not found.");
+                }
+
+                return this.Request.CreateResponse(HttpStatusCode.OK, items);
+            }
+            catch (ApiNotFoundException e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+            }
+            catch (Exception e)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+            }
+        }
+
         private IEnumerable<ResourceCategory> GetCategories()
         {
             var resourcesNode = this.Website.FirstChildOfType("communityResources");
