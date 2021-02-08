@@ -8,8 +8,10 @@ using CovidSupport.Api.Factories;
 using CovidSupport.Api.Models;
 using Examine;
 using Examine.LuceneEngine.Search;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core;
+using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 
@@ -32,7 +34,7 @@ namespace CovidSupport.Api.Controllers
                     Regions = null
                 };
 
-                return this.Request.CreateResponse(HttpStatusCode.Accepted, settings);
+                return this.Request.CreateResponse(HttpStatusCode.OK, settings);
             }
             catch (ApiNotFoundException e)
             {
@@ -84,7 +86,7 @@ namespace CovidSupport.Api.Controllers
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Category not found.");
                 }
                 
-                return this.Request.CreateResponse(HttpStatusCode.Accepted, items);
+                return this.Request.CreateResponse(HttpStatusCode.OK, items);
             }
             catch (ApiNotFoundException e)
             {
@@ -147,7 +149,7 @@ namespace CovidSupport.Api.Controllers
                 {
                     var item = this.BuildResource(result);
 
-                    return this.Request.CreateResponse(HttpStatusCode.Accepted, item);
+                    return this.Request.CreateResponse(HttpStatusCode.OK, item);
                 }
                 else
                 {
@@ -278,11 +280,73 @@ namespace CovidSupport.Api.Controllers
             }
         }
 
+        [HttpPut]
+        public HttpResponseMessage Add(JToken putValue)
+        {
+            if (putValue == null)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "PUT Value cannot be null");
+            }
+
+            var resourceType = putValue.Value<string>("resourceTypeId");
+            var categoryNode = this.GetCategoryNodeForAllowedContent(resourceType);
+
+            if (categoryNode == null)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Cannot find resource category for resource type " + resourceType);
+            }
+
+            var content = this.BuildContent(putValue, resourceType, categoryNode.Id);
+            this.Services.ContentService.SaveAndPublish(content, raiseEvents: true);
+
+            return this.Request.CreateResponse(HttpStatusCode.NotImplemented);
+        }
+
+        [HttpPut]
+        public HttpResponseMessage Edit(int id, JToken putValue)
+        {
+            var content = this.Umbraco.Content(id);
+
+            if (content == null)
+            {
+                return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource with id " + id + " not found");
+            }
+
+            var contentNode = this.BuildContent(putValue, content);
+            this.Services.ContentService.SaveAndPublish(contentNode, raiseEvents: true);
+
+            return this.Request.CreateResponse(HttpStatusCode.NotImplemented);
+        }
+
         private IEnumerable<ResourceCategory> GetCategories()
         {
             var resourcesNode = this.Website.FirstChildOfType("communityResources");
 
             return resourcesNode.Children().Select(this.GetCategory);
+        }
+
+        private ResourceCategory GetCategory(IPublishedContent content)
+        {
+            if (content == null)
+            {
+                return null;
+            }
+
+            var category = new ResourceCategory
+            {
+                Id = content.Id,
+                Name = content.Name
+            };
+
+            var isContainer = this.Services.ContentTypeService.Get(content.ContentType.Id).IsContainer;
+
+            if (!isContainer)
+            {
+                var subcategories = content.Children().Select(this.GetCategory);
+                category.Subcategories = subcategories.Any() ? subcategories : null; ;
+            }
+
+            return category;
         }
 
         private ResourceCategory FindInCategoryTree(IEnumerable<ResourceCategory> categories, int id)
@@ -309,6 +373,22 @@ namespace CovidSupport.Api.Controllers
             return findCategory;
         }
 
+        private IContentType GetCategoryNodeForAllowedContent(string resourceType)
+        {
+            var categoryNodes = this.Website.FirstChildOfType("communityResources").DescendantsOrSelf();
+
+            foreach (var node in categoryNodes)
+            {
+                var contentType = this.Services.ContentTypeService.Get(node.Id);
+
+                if (!contentType.IsContainer && contentType.AllowedContentTypes.Any(x => x.Alias == resourceType)) {
+                    return contentType;
+                }
+            }
+
+            return null;
+        }
+
         private IEnumerable<Region> GetRegions()
         {
             var regionsNode = this.Website.DescendantOfType("regions");
@@ -316,36 +396,12 @@ namespace CovidSupport.Api.Controllers
             return regionsNode != null
                 ? regionsNode.Children.Select(x => new Region {Name = x.Name, Alias = x.UrlSegment})
                 : new List<Region>();
-        }
-
-        private ResourceCategory GetCategory(IPublishedContent content)
-        {
-            if (content == null)
-            {
-                return null;
-            }
-
-            var category = new ResourceCategory
-            {
-                Id = content.Id,
-                Name = content.Name
-            };
-
-            var isContainer = this.Services.ContentTypeService.Get(content.ContentType.Id).IsContainer;
-
-            if (!isContainer)
-            {
-                var subcategories = content.Children().Select(this.GetCategory);
-                category.Subcategories = subcategories.Any() ? subcategories : null;;
-            }
-
-            return category;
-        }
+        }        
 
         private IResourceItem BuildResource(ISearchResult searchResult)
         {
             var resourceType = searchResult.GetValues("__NodeTypeAlias").FirstOrDefault();
-            var item = ResourceFactoryProvider.GetResourceFactory(resourceType, this.Umbraco, this.CultureName).BuildResource(searchResult);
+            var item = ResourceFactoryProvider.GetResourceFactory(resourceType, this.Umbraco, this.Services.ContentService, this.CultureName).BuildResource(searchResult);
 
             return item;
         }
@@ -357,10 +413,22 @@ namespace CovidSupport.Api.Controllers
 
             foreach (var group in groupedResults)
             {
-                items.AddRange(ResourceFactoryProvider.GetResourceFactory(group.Key, this.Umbraco, this.CultureName).BuildResourcesList(group.AsEnumerable()));
+                items.AddRange(ResourceFactoryProvider.GetResourceFactory(group.Key, this.Umbraco, this.Services.ContentService, this.CultureName).BuildResourcesList(group.AsEnumerable()));
             }
 
             return items;
+        }
+
+        private IContent BuildContent(JToken putValue, string resourceType, int categoryNodeId)
+        {
+            return ResourceFactoryProvider.GetResourceFactory(resourceType, this.Umbraco, this.Services.ContentService, this.CultureName).BuildContent(putValue, resourceType, categoryNodeId);
+        }
+
+        private IContent BuildContent(JToken putValue, IPublishedContent content)
+        {
+            var contentNode = this.Services.ContentService.GetById(content.Id);
+
+            return ResourceFactoryProvider.GetResourceFactory(content.ContentType.Alias, this.Umbraco, this.Services.ContentService, this.CultureName).BuildContent(putValue, contentNode);
         }
 
         private string GetProviderName(ISearchResult result)

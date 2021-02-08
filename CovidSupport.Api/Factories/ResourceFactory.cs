@@ -1,16 +1,19 @@
 ﻿using CovidSupport.Api.Models;
 using Examine;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core.Models;
+using Umbraco.Core.Services;
 using Umbraco.Web;
 
 namespace CovidSupport.Api.Factories
 {
     public class ResourceFactory : ResourceFactoryBase
     {
-        public ResourceFactory(UmbracoHelper helper, string culture) : base(helper, culture)
+        public ResourceFactory(UmbracoHelper helper, IContentService contentService, string culture) : base(helper, contentService, culture)
         {
         }
 
@@ -123,6 +126,24 @@ namespace CovidSupport.Api.Factories
             return searchResults.Select(BuildResourceListItem);
         }
 
+        public override IContent BuildContent(JToken resourceItem, string resourceTypeAlias, int categoryNodeId)
+        {
+            var resource = resourceItem.ToObject<Resource>();
+
+            var content = this.Create(resource.Name, categoryNodeId, resourceTypeAlias);
+            this.SetContentValues(content, resource);
+
+            return content;
+        }
+
+        public override IContent BuildContent(JToken resourceItem, IContent content)
+        {
+            var resource = resourceItem.ToObject<Resource>();
+            this.SetContentValues(content, resource);
+
+            return content;
+        }
+
         private IResourceItemBase BuildResourceListItem(ISearchResult searchResult)
         {
             if (searchResult == null)
@@ -161,6 +182,11 @@ namespace CovidSupport.Api.Factories
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options
             };
+        }
+
+        private void SetContentValues(IContent content, Resource resource)
+        {
+
         }
     }
 }

@@ -5,6 +5,8 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core.Models;
+using Umbraco.Core.Services;
 using Umbraco.Web;
 
 namespace CovidSupport.Api.Factories
@@ -13,13 +15,16 @@ namespace CovidSupport.Api.Factories
     {
         private UmbracoHelper helper;
 
+        private IContentService contentService;
+
         private string defaultCulture = "en_US";
 
         protected string Culture;
 
-        protected ResourceFactoryBase(UmbracoHelper umbracoHelper, string culture)
+        protected ResourceFactoryBase(UmbracoHelper umbracoHelper, IContentService contentService, string culture)
         {
             this.helper = umbracoHelper;
+            this.contentService = contentService;
             this.Culture = culture;
         }
 
@@ -28,6 +33,10 @@ namespace CovidSupport.Api.Factories
         public abstract IEnumerable<IResourceItemBase> BuildResourcesList(IEnumerable<ISearchResult> searchResults);
 
         public abstract IEnumerable<IResourceItem> BuildResources(IEnumerable<ISearchResult> searchResults);
+
+        public abstract IContent BuildContent(JToken resourceItem, string resourceTypeAlias, int categoryNodeId);
+
+        public abstract IContent BuildContent(JToken resourceItem, IContent content);
 
         protected OpeningTimes GetDayOpeningTimes(string day, string str)
         {
@@ -133,6 +142,11 @@ namespace CovidSupport.Api.Factories
             }
 
             return retVal;
+        }
+
+        protected IContent Create(string name, int parentId, string alias)
+        {
+            return this.contentService.Create(name, parentId, alias);
         }
     }
 }
