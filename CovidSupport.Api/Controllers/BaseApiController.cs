@@ -103,6 +103,7 @@ namespace CovidSupport.Api.Controllers
             this.Configuration.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
             this.Configuration.Formatters.JsonFormatter.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;            
             this.Configuration.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"));
+            this.Configuration.Formatters.JsonFormatter.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.None;
 
             //this.Configuration.Formatters.JsonFormatter.UseDataContractJsonSerializer = true;
             //this.Configuration.Formatters.Remove(GlobalConfiguration.Configuration.Formatters.XmlFormatter);
