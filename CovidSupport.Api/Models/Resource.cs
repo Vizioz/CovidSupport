@@ -22,6 +22,8 @@ namespace CovidSupport.Api.Models
 
         public string Category { get; set; }
 
+        public string ClassificationType { get; set; }
+
         public string[] Options { get; set; }
 
         public string Icon { get; set; }
@@ -44,7 +46,7 @@ namespace CovidSupport.Api.Models
 
         public double? Lat { get; set; }
 
-        public double? Lon { get; set; }
+        public double? Lng { get; set; }
 
         public string ProviderAddLoc { get; set; }
 

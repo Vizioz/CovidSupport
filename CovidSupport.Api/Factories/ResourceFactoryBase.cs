@@ -5,6 +5,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
 using Umbraco.Web;
@@ -159,15 +160,48 @@ namespace CovidSupport.Api.Factories
 
         protected string GetIcon(ISearchResult searchResult)
         {
+            var icon = this.GetResourceTypeIcon(searchResult);
+
+            if (string.IsNullOrEmpty(icon))
+            {
+                icon = this.GetDocumentTypeIcon(searchResult);
+            }
+
+            return icon;
+        }
+
+        private string GetResourceTypeIcon(ISearchResult searchResult)
+        {
+            var classificationType = this.GetResultValue(searchResult, "classificationType");
+
+            if (!string.IsNullOrEmpty(classificationType))
+            {
+                var content = this.helper.Content(classificationType);
+                var icon = content.Value("classificationIcon");
+                object iconValue = icon?.GetType().GetProperty("ClassName")?.GetValue(icon, null);
+
+                return this.GetFaIcon(iconValue.ToString());
+            }
+
+            return null;
+        }
+
+        private string GetDocumentTypeIcon(ISearchResult searchResult)
+        {
             var icon = this.GetResultValue(searchResult, "icon");
 
-            if (!string.IsNullOrEmpty(icon) && icon.StartsWith("icon-fa"))
+            return this.GetFaIcon(icon);
+        }
+
+        private string GetFaIcon(string icon)
+        {
+            if (!string.IsNullOrEmpty(icon) && icon.StartsWith("icon-"))
             {
                 return icon.Split(' ')[0].Replace("icon-", string.Empty);
             }
             else
             {
-                return null;
+                return icon;
             }
         }
     }

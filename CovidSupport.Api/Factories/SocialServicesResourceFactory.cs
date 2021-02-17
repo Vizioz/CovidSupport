@@ -35,6 +35,7 @@ namespace CovidSupport.Api.Factories
             var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
             var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
             var longDescription = this.GetResultCultureValueWithFallback(searchResult, "longDescription");
+            var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
 
             // Access
             var eligibility = this.GetResultCultureValueWithFallback(searchResult, "eligibility");
@@ -110,6 +111,7 @@ namespace CovidSupport.Api.Factories
                 ResourceAccessNotes = access,
                 Region = region,
                 Category = category,
+                ClassificationType = classificationType,
                 GeographicRestrictions = geographicRestrictions,
                 SafeForUndocumentedIndividuals = safeForUndocumentedIndividuals,
                 Free = free,
@@ -133,7 +135,7 @@ namespace CovidSupport.Api.Factories
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
                 Lat = mapInfo?.Lat,
-                Lon = mapInfo?.Lng,
+                Lng = mapInfo?.Lng,
                 Status = status,
                 OpenHours = openingHours.Where(x => x.Hours.Any()).ToList(),
                 HolidaysOpeningTimes = holidays,
@@ -188,6 +190,7 @@ namespace CovidSupport.Api.Factories
 
             var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
             var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
+            var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
             var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
             var address = this.GetResultValue(searchResult, "streetAddress");
             var city = this.GetResultValue(searchResult, "city");
@@ -208,6 +211,7 @@ namespace CovidSupport.Api.Factories
                 Description = shortDescription,
                 Region = region,
                 Category = category,
+                ClassificationType = classificationType,
                 Address = address,
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
@@ -216,7 +220,7 @@ namespace CovidSupport.Api.Factories
                 Options = optList.ToArray(),
                 Icon = icon,
                 Lat = mapInfo?.Lat,
-                Lon = mapInfo?.Lng,
+                Lng = mapInfo?.Lng,
             };
         }
 
