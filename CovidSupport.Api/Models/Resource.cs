@@ -22,6 +22,10 @@ namespace CovidSupport.Api.Models
 
         public string Category { get; set; }
 
+        public string[] Options { get; set; }
+
+        public string Icon { get; set; }
+
         public List<OpeningTimes> OpenHours { get; set; }
 
         public string Contact { get; set; }
@@ -36,9 +40,7 @@ namespace CovidSupport.Api.Models
 
         public string Facebook { get; set; }
 
-        public bool Free { get; set; }
-
-        public string[] Options { get; set; }
+        public bool Free { get; set; }        
 
         public double? Lat { get; set; }
 

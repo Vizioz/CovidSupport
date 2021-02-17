@@ -23,6 +23,8 @@ namespace CovidSupport.Api.Models
 
         public string[] Options { get; set; }
 
+        public string Icon { get; set; }
+
         public double? Lat { get; set; }
 
         public double? Lon { get; set; }        

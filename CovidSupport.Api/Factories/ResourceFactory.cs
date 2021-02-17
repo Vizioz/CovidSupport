@@ -1,16 +1,19 @@
 ﻿using CovidSupport.Api.Models;
 using Examine;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core.Models;
+using Umbraco.Core.Services;
 using Umbraco.Web;
 
 namespace CovidSupport.Api.Factories
 {
     public class ResourceFactory : ResourceFactoryBase
     {
-        public ResourceFactory(UmbracoHelper helper, string culture) : base(helper, culture)
+        public ResourceFactory(UmbracoHelper helper, IContentService contentService, string culture) : base(helper, contentService, culture)
         {
         }
 
@@ -23,61 +26,61 @@ namespace CovidSupport.Api.Factories
 
             // Id
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(searchResult.GetValues("parentID").FirstOrDefault(), out int parentId);
+            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
             var category = this.GetSingleNodeName(parentId);
+            var icon = this.GetIcon(searchResult);
 
             // Provider
-            var providerName = searchResult.GetValues("providerName").FirstOrDefault();
-            var providerAddLoc = searchResult.GetValues("providerAddLoc").FirstOrDefault();
-            var free = searchResult.GetValues("free").FirstOrDefault() == "1";
-            var description = searchResult.GetValues("cuisine").FirstOrDefault();
+            var providerName = this.GetResultValue(searchResult, "providerName");
+            var providerAddLoc = this.GetResultValue(searchResult, "providerAddLoc");
+            var free = this.GetResultBooleanValue(searchResult, "free");
+            var description = this.GetResultValue(searchResult, "cuisine");
 
             // Location
-            var address = searchResult.GetValues("address").FirstOrDefault();
-            var city = searchResult.GetValues("city").FirstOrDefault();
-            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
-            var stateList = searchResult.GetValues("state").FirstOrDefault();
+            var address = this.GetResultValue(searchResult, "address");
+            var city = this.GetResultValue(searchResult, "city");
+            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
-            var zip = searchResult.GetValues("zip").FirstOrDefault();            
-            var map = searchResult.GetValues("map").FirstOrDefault();
-            var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
+            var zip = this.GetResultValue(searchResult, "zip");
+            var mapInfo = this.GetMapInfo(searchResult, "map");
 
             // Opening Times
             var openingHours = new List<OpeningTimes>
             {
-                this.GetDayOpeningTimes("monday", searchResult.GetValues("monday").FirstOrDefault()),
-                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("tuesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("wednesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("thursday", searchResult.GetValues("thursday").FirstOrDefault()),
-                this.GetDayOpeningTimes("friday", searchResult.GetValues("friday").FirstOrDefault()),
-                this.GetDayOpeningTimes("saturday", searchResult.GetValues("saturday").FirstOrDefault()),
-                this.GetDayOpeningTimes("sunday", searchResult.GetValues("sunday").FirstOrDefault())
+                this.GetDayOpeningTimes("monday", this.GetResultValue(searchResult, "monday")),
+                this.GetDayOpeningTimes("tuesday", this.GetResultValue(searchResult, "tuesday")),
+                this.GetDayOpeningTimes("wednesday", this.GetResultValue(searchResult, "wednesday")),
+                this.GetDayOpeningTimes("thursday", this.GetResultValue(searchResult, "thursday")),
+                this.GetDayOpeningTimes("friday", this.GetResultValue(searchResult, "friday")),
+                this.GetDayOpeningTimes("saturday", this.GetResultValue(searchResult, "saturday")),
+                this.GetDayOpeningTimes("sunday", this.GetResultValue(searchResult, "sunday"))
             };
 
             var specialHours = new List<OpeningTimes>
             {
-                this.GetDayOpeningTimes("monday", searchResult.GetValues("spMonday").FirstOrDefault()),
-                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("spTuesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("spWednesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("thursday", searchResult.GetValues("spThursday").FirstOrDefault()),
-                this.GetDayOpeningTimes("friday", searchResult.GetValues("spFriday").FirstOrDefault()),
-                this.GetDayOpeningTimes("saturday", searchResult.GetValues("spSaturday").FirstOrDefault()),
-                this.GetDayOpeningTimes("sunday", searchResult.GetValues("spSunday").FirstOrDefault())
+                this.GetDayOpeningTimes("monday", this.GetResultValue(searchResult, "spMonday")),
+                this.GetDayOpeningTimes("tuesday", this.GetResultValue(searchResult, "spTuesday")),
+                this.GetDayOpeningTimes("wednesday", this.GetResultValue(searchResult, "spWednesday")),
+                this.GetDayOpeningTimes("thursday", this.GetResultValue(searchResult, "spThursday")),
+                this.GetDayOpeningTimes("friday", this.GetResultValue(searchResult, "spFriday")),
+                this.GetDayOpeningTimes("saturday", this.GetResultValue(searchResult, "spSaturday")),
+                this.GetDayOpeningTimes("sunday", this.GetResultValue(searchResult, "spSunday"))
             };
 
             // Contact
-            var contact = searchResult.GetValues("contact").FirstOrDefault();
-            var contactSpanish = searchResult.GetValues("contactSpanish").FirstOrDefault();
-            var email = searchResult.GetValues("email").FirstOrDefault();
-            var webLink = searchResult.GetValues("webLink").FirstOrDefault();
-            var twitter = searchResult.GetValues("twitter").FirstOrDefault();
-            var instagram = searchResult.GetValues("instagram").FirstOrDefault();
-            var facebook = searchResult.GetValues("facebook").FirstOrDefault();
+            var contact = this.GetResultValue(searchResult, "contact");
+            var contactSpanish = this.GetResultValue(searchResult, "contactSpanish");
+            var email = this.GetResultValue(searchResult, "email");
+            var webLink = this.GetResultValue(searchResult, "webLink");
+            var twitter = this.GetResultValue(searchResult, "twitter");
+            var instagram = this.GetResultValue(searchResult, "instagram");
+            var facebook = this.GetResultValue(searchResult, "facebook");
 
             // Instructions
-            var instructions = searchResult.GetValues("instructions_" + this.Culture).FirstOrDefault();
-            var offers = searchResult.GetValues("offers_" + this.Culture).FirstOrDefault();
-            var notes = searchResult.GetValues("notes_" + this.Culture).FirstOrDefault();
+            var instructions = this.GetResultCultureValueWithFallback(searchResult, "instructions");
+            var offers = this.GetResultCultureValueWithFallback(searchResult, "offers");
+            var notes = this.GetResultCultureValueWithFallback(searchResult, "notes");
 
             // Options
             var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
@@ -96,6 +99,7 @@ namespace CovidSupport.Api.Factories
                 Lat = mapInfo?.Lat,
                 Lon = mapInfo?.Lng,
                 Options = options,
+                Icon = icon,
                 ProviderAddLoc = providerAddLoc,
                 Free = free,
                 OpenHours = openingHours.Where(x => x.Hours.Any()).ToList(),
@@ -123,6 +127,24 @@ namespace CovidSupport.Api.Factories
             return searchResults.Select(BuildResourceListItem);
         }
 
+        public override IContent BuildContent(JToken resourceItem, string resourceTypeAlias, int categoryNodeId)
+        {
+            var resource = resourceItem.ToObject<Resource>();
+
+            var content = this.Create(resource.Name, categoryNodeId, resourceTypeAlias);
+            this.SetContentValues(content, resource);
+
+            return content;
+        }
+
+        public override IContent BuildContent(JToken resourceItem, IContent content)
+        {
+            var resource = resourceItem.ToObject<Resource>();
+            this.SetContentValues(content, resource);
+
+            return content;
+        }
+
         private IResourceItemBase BuildResourceListItem(ISearchResult searchResult)
         {
             if (searchResult == null)
@@ -131,21 +153,21 @@ namespace CovidSupport.Api.Factories
             }
 
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(searchResult.GetValues("parentID").FirstOrDefault(), out int parentId);
+            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
             var category = this.GetSingleNodeName(parentId);
+            var icon = this.GetIcon(searchResult);
 
-            var providerName = searchResult.GetValues("providerName").FirstOrDefault();
-            var description = searchResult.GetValues("cuisine").FirstOrDefault();
-            var address = searchResult.GetValues("address").FirstOrDefault();
-            var city = searchResult.GetValues("city").FirstOrDefault();
-            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
-            var stateList = searchResult.GetValues("state").FirstOrDefault();
+            var providerName = this.GetResultValue(searchResult, "providerName");
+            var description = this.GetResultValue(searchResult, "cuisine");
+            var address = this.GetResultValue(searchResult, "address");
+            var city = this.GetResultValue(searchResult, "city");
+            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
-            var zip = searchResult.GetValues("zip").FirstOrDefault();
-            var map = searchResult.GetValues("map").FirstOrDefault();
-            var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
+            var zip = this.GetResultValue(searchResult, "zip");
+            var mapInfo = this.GetMapInfo(searchResult, "map");
             var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
-
+            
             return new ResourceListItem
             {
                 Id = id,
@@ -159,8 +181,61 @@ namespace CovidSupport.Api.Factories
                 Category = category,
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
-                Options = options
+                Options = options,
+                Icon = icon
             };
+        }
+
+        private void SetContentValues(IContent content, Resource resource)
+        {
+            this.SetPropertyValue(content, "providerName", resource.Name);
+            this.SetPropertyValue(content, "providerAddLoc", resource.ProviderAddLoc);
+            this.SetPropertyValue(content, "free", resource.Free);
+            this.SetPropertyValue(content, "description", resource.Description);
+
+            this.SetPropertyValue(content, "address", resource.Address);
+            this.SetPropertyValue(content, "city", resource.City);
+            this.SetPropertyValue(content, "region", resource.Region); // TODO
+            this.SetPropertyValue(content, "state", resource.State); // TODO
+            this.SetPropertyValue(content, "zip", resource.Zip);
+            this.SetPropertyValue(content, "map", resource.Lat); // TODO
+
+            this.SetPropertyValue(content, "monday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "tuesday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "wednesday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "thursday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "friday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "saturday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "sunday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "spMonday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "spTuesday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "spWednesday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "spThursday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "spFriday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "spSaturday", resource.OpenHours[0]); // TODO
+            this.SetPropertyValue(content, "spSunday", resource.OpenHours[0]); // TODO
+
+            this.SetPropertyValue(content, "contact", resource.Contact);
+            this.SetPropertyValue(content, "contactSpanish", resource.ContactSpanish);
+            this.SetPropertyValue(content, "email", resource.Email);
+            this.SetPropertyValue(content, "webLink", resource.WebLink);
+            this.SetPropertyValue(content, "twitter", resource.Twitter);
+            this.SetPropertyValue(content, "instagram", resource.Instagram);
+            this.SetPropertyValue(content, "facebook", resource.Facebook);
+
+            this.SetPropertyValue(content, "instructions", resource.Instructions);
+            this.SetPropertyValue(content, "offers", resource.Offers);
+            this.SetPropertyValue(content, "notes", resource.Notes);
+
+            this.SetPropertyValue(content, "options", resource.Options.FirstOrDefault(x => x == "Options") != null); // TODO
+        }
+
+        private void SetPropertyValue(IContent content, string propertyAlias, object value, string culture = null)
+        {
+            if (content.HasProperty(propertyAlias))
+            {
+                content.SetValue(propertyAlias, value, culture);
+            }
         }
     }
 }

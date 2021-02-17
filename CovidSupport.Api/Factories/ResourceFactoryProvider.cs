@@ -1,22 +1,28 @@
-﻿using Umbraco.Web;
+﻿using Umbraco.Core.Services;
+using Umbraco.Web;
 
 namespace CovidSupport.Api.Factories
 {
     public class ResourceFactoryProvider
     {
-        public static IResourceFactory GetResourceFactory(string resourceType, UmbracoHelper helper, string culture)
+        public static IResourceFactory GetResourceFactory(string resourceType, UmbracoHelper helper, IContentService contentService, string culture)
         {
             if (helper == null)
             {
                 helper = Umbraco.Web.Composing.Current.UmbracoHelper;
             }
 
+            if (contentService == null)
+            {
+                contentService = Umbraco.Core.Composing.Current.Services.ContentService;
+            }
+
             switch (resourceType)
             {
                 case "socialServices":
-                    return new SocialServicesResourceFactory(helper, culture);
+                    return new SocialServicesResourceFactory(helper, contentService, culture);
                 default:
-                    return new ResourceFactory(helper, culture);
+                    return new ResourceFactory(helper, contentService, culture);
             }
         }
 

@@ -5,6 +5,8 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core.Models;
+using Umbraco.Core.Services;
 using Umbraco.Web;
 
 namespace CovidSupport.Api.Factories
@@ -13,11 +15,16 @@ namespace CovidSupport.Api.Factories
     {
         private UmbracoHelper helper;
 
+        private IContentService contentService;
+
+        private string defaultCulture = "en_US";
+
         protected string Culture;
 
-        protected ResourceFactoryBase(UmbracoHelper umbracoHelper, string culture)
+        protected ResourceFactoryBase(UmbracoHelper umbracoHelper, IContentService contentService, string culture)
         {
             this.helper = umbracoHelper;
+            this.contentService = contentService;
             this.Culture = culture;
         }
 
@@ -26,6 +33,10 @@ namespace CovidSupport.Api.Factories
         public abstract IEnumerable<IResourceItemBase> BuildResourcesList(IEnumerable<ISearchResult> searchResults);
 
         public abstract IEnumerable<IResourceItem> BuildResources(IEnumerable<ISearchResult> searchResults);
+
+        public abstract IContent BuildContent(JToken resourceItem, string resourceTypeAlias, int categoryNodeId);
+
+        public abstract IContent BuildContent(JToken resourceItem, IContent content);
 
         protected OpeningTimes GetDayOpeningTimes(string day, string str)
         {
@@ -104,6 +115,60 @@ namespace CovidSupport.Api.Factories
             }
 
             return this.helper.Content(id)?.Name;
+        }
+
+        protected string GetResultValue (ISearchResult searchResult, string property)
+        {
+            return searchResult.GetValues(property).FirstOrDefault();
+        }
+
+        protected bool GetResultBooleanValue(ISearchResult searchResult, string property)
+        {
+            return searchResult.GetValues(property).FirstOrDefault() == "1";
+        }
+
+        protected string GetResultCultureValueWithFallback(ISearchResult searchResult, string property)
+        {
+            var retVal = searchResult.GetValues(property + "_" + this.Culture).FirstOrDefault();
+
+            if (retVal == null && this.Culture != defaultCulture)
+            {
+                retVal = searchResult.GetValues(property + "_" + defaultCulture).FirstOrDefault();
+            }
+
+            if (retVal == null && this.Culture != defaultCulture)
+            {
+                retVal = this.GetResultValue(searchResult, property);
+            }
+
+            return retVal;
+        }
+
+        protected IContent Create(string name, int parentId, string alias)
+        {
+            return this.contentService.Create(name, parentId, alias);
+        }
+
+        protected MapInfo GetMapInfo(ISearchResult searchResult, string mapPropertyAlias)
+        {
+            var map = this.GetResultValue(searchResult, mapPropertyAlias);
+            var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
+
+            return mapInfo;
+        }
+
+        protected string GetIcon(ISearchResult searchResult)
+        {
+            var icon = this.GetResultValue(searchResult, "icon");
+
+            if (!string.IsNullOrEmpty(icon) && icon.StartsWith("icon-fa"))
+            {
+                return icon.Split(' ')[0].Replace("icon-", string.Empty);
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

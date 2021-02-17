@@ -5,13 +5,15 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core.Models;
+using Umbraco.Core.Services;
 using Umbraco.Web;
 
 namespace CovidSupport.Api.Factories
 {
     public class SocialServicesResourceFactory : ResourceFactoryBase
     {
-        public SocialServicesResourceFactory(UmbracoHelper helper, string culture) : base(helper, culture)
+        public SocialServicesResourceFactory(UmbracoHelper helper, IContentService contentService, string culture) : base(helper, contentService, culture)
         {
         }
 
@@ -24,73 +26,78 @@ namespace CovidSupport.Api.Factories
 
             // Id
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(searchResult.GetValues("parentID").FirstOrDefault(), out int parentId);
+            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
             var category = this.GetSingleNodeName(parentId);
+            var icon = this.GetIcon(searchResult);
 
             // Provider
-            var providerName = searchResult.GetValues("providerName_" + this.Culture).FirstOrDefault();
-            var serviceName = searchResult.GetValues("serviceName_" + this.Culture).FirstOrDefault();
-            var shortDescription = searchResult.GetValues("shortDescription_" + this.Culture).FirstOrDefault();
-            var longDescription = searchResult.GetValues("longDescription_" + this.Culture).FirstOrDefault();
+            var providerName = this.GetResultCultureValueWithFallback(searchResult, "providerName");
+            var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
+            var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
+            var longDescription = this.GetResultCultureValueWithFallback(searchResult, "longDescription");
 
             // Access
-            var eligibility = searchResult.GetValues("eligibility_" + this.Culture).FirstOrDefault();
-            var access = searchResult.GetValues("resourceAccessNotes_" + this.Culture).FirstOrDefault();
-            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
-            var geographicRestrictions = searchResult.GetValues("geographicRestrictions_" + this.Culture).FirstOrDefault();
-            var safeForUndocumentedIndividuals = searchResult.GetValues("safeForUndocumentedIndividuals").FirstOrDefault() == "1";
-            var free = searchResult.GetValues("free").FirstOrDefault() == "1";
-            var lowCost = searchResult.GetValues("lowCost").FirstOrDefault() == "1";
-            var acceptsMedicare = searchResult.GetValues("lowCost").FirstOrDefault() == "1";
-            var acceptsUninsuredPatients = searchResult.GetValues("lowCost").FirstOrDefault() == "1";
-            var acceptsMedicaid = searchResult.GetValues("lowCost").FirstOrDefault() == "1";
+            var eligibility = this.GetResultCultureValueWithFallback(searchResult, "eligibility");
+            var access = this.GetResultCultureValueWithFallback(searchResult, "resourceAccessNotes");
+            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var geographicRestrictions = this.GetResultCultureValueWithFallback(searchResult, "geographicRestrictions");
+            var safeForUndocumentedIndividuals = this.GetResultBooleanValue(searchResult, "safeForUndocumentedIndividuals");
+            var free = this.GetResultBooleanValue(searchResult, "free");
+            var lowCost = this.GetResultBooleanValue(searchResult, "lowCost");
+            var acceptsMedicare = this.GetResultBooleanValue(searchResult, "lowCost");
+            var acceptsUninsuredPatients = this.GetResultBooleanValue(searchResult, "lowCost");
+            var acceptsMedicaid = this.GetResultBooleanValue(searchResult, "lowCost");
 
             // Contact
-            var webLink = searchResult.GetValues("website").FirstOrDefault();
-            var email = searchResult.GetValues("email").FirstOrDefault();
-            var twitter = searchResult.GetValues("twitter").FirstOrDefault();
-            var instagram = searchResult.GetValues("instagram").FirstOrDefault();
-            var facebook = searchResult.GetValues("facebook").FirstOrDefault();
-            var primaryPhone = searchResult.GetValues("primaryPhone").FirstOrDefault();
-            var languagePhones = this.GetLanguagePhones(searchResult.GetValues("languagePhones").FirstOrDefault());
-            var crisisPhone = searchResult.GetValues("crisisPhone").FirstOrDefault();
-            var crisisPhoneInstructions = searchResult.GetValues("crisisPhoneInstructions_" + this.Culture).FirstOrDefault();
-            var afterHoursPhone = searchResult.GetValues("afterHoursPhone").FirstOrDefault();
-            var afterHoursPhoneInstructions = searchResult.GetValues("afterHoursPhoneInstructions_" + this.Culture).FirstOrDefault();
+            var webLink = this.GetResultValue(searchResult, "website");
+            var email = this.GetResultValue(searchResult, "email");
+            var twitter = this.GetResultValue(searchResult, "twitter");
+            var instagram = this.GetResultValue(searchResult, "instagram");
+            var facebook = this.GetResultValue(searchResult, "facebook");
+            var primaryPhone = this.GetResultValue(searchResult, "primaryPhone");
+            var languagePhones = this.GetLanguagePhones(this.GetResultValue(searchResult, "languagePhones"));
+            var crisisPhone = this.GetResultValue(searchResult, "crisisPhone");
+            var crisisPhoneInstructions = this.GetResultCultureValueWithFallback(searchResult, "crisisPhoneInstructions");
+            var afterHoursPhone = this.GetResultValue(searchResult, "afterHoursPhone");
+            var afterHoursPhoneInstructions = this.GetResultCultureValueWithFallback(searchResult, "afterHoursPhoneInstructions");
 
             // Location
-            var address = searchResult.GetValues("streetAddress").FirstOrDefault();
-            var city = searchResult.GetValues("city").FirstOrDefault();
-            var stateList = searchResult.GetValues("state").FirstOrDefault();
+            var address = this.GetResultValue(searchResult, "streetAddress");
+            var city = this.GetResultValue(searchResult, "city");
+            var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
-            var zip = searchResult.GetValues("zip").FirstOrDefault();
+            var zip = this.GetResultValue(searchResult, "zip");
+            var mapInfo = this.GetMapInfo(searchResult, "map");
 
             // Opening Times
-            var statusList = searchResult.GetValues("status").FirstOrDefault();
+            var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
             var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList)[0] : string.Empty;
 
             var openingHours = new List<OpeningTimes>
             {
-                this.GetDayOpeningTimes("monday", searchResult.GetValues("monday").FirstOrDefault()),
-                this.GetDayOpeningTimes("tuesday", searchResult.GetValues("tuesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("wednesday", searchResult.GetValues("wednesday").FirstOrDefault()),
-                this.GetDayOpeningTimes("thursday", searchResult.GetValues("thursday").FirstOrDefault()),
-                this.GetDayOpeningTimes("friday", searchResult.GetValues("friday").FirstOrDefault()),
-                this.GetDayOpeningTimes("saturday", searchResult.GetValues("saturday").FirstOrDefault()),
-                this.GetDayOpeningTimes("sunday", searchResult.GetValues("sunday").FirstOrDefault())
+                this.GetDayOpeningTimes("monday", this.GetResultValue(searchResult, "monday")),
+                this.GetDayOpeningTimes("tuesday", this.GetResultValue(searchResult, "tuesday")),
+                this.GetDayOpeningTimes("wednesday", this.GetResultValue(searchResult, "wednesday")),
+                this.GetDayOpeningTimes("thursday", this.GetResultValue(searchResult, "thursday")),
+                this.GetDayOpeningTimes("friday", this.GetResultValue(searchResult, "friday")),
+                this.GetDayOpeningTimes("saturday", this.GetResultValue(searchResult, "saturday")),
+                this.GetDayOpeningTimes("sunday", this.GetResultValue(searchResult, "sunday"))
             };
 
-            var holidays = searchResult.GetValues("holidays_" + this.Culture).FirstOrDefault();
-            var specialHours = searchResult.GetValues("specialHours_" + this.Culture).FirstOrDefault();
+            var holidays = this.GetResultCultureValueWithFallback(searchResult, "holidays");
+            var specialHours = this.GetResultCultureValueWithFallback(searchResult, "specialHours");
 
             // Populations Served
-            var populations = this.GetNodesName(searchResult.GetValues("populationsServed").FirstOrDefault());
+            var populations = this.GetNodesName(this.GetResultValue(searchResult, "populationsServed"));
 
             // Languages Supported
-            var languages = this.GetNodesName(searchResult.GetValues("languagesSupported").FirstOrDefault());
+            var languages = this.GetNodesName(this.GetResultValue(searchResult, "languagesSupported"));
 
             // Categories
-            var tags = this.GetNodesName(searchResult.GetValues("tags").FirstOrDefault());
+            var tags = this.GetNodesName(this.GetResultValue(searchResult, "tags"));
+
+            // Options
+            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
 
             return new SocialServiceResource()
             {
@@ -125,13 +132,17 @@ namespace CovidSupport.Api.Factories
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
+                Lat = mapInfo?.Lat,
+                Lon = mapInfo?.Lng,
                 Status = status,
                 OpenHours = openingHours.Where(x => x.Hours.Any()).ToList(),
                 HolidaysOpeningTimes = holidays,
                 SpecialHoursOpeningTimes = specialHours,
                 PopulationsServed = populations,
                 LanguagesSupported = languages,
-                Tags = tags
+                Tags = tags,
+                Options = options,
+                Icon = icon
             };
         }
 
@@ -145,6 +156,24 @@ namespace CovidSupport.Api.Factories
             return searchResults.Select(BuildResourceListItem);
         }
 
+        public override IContent BuildContent(JToken resourceItem, string resourceTypeAlias, int categoryNodeId)
+        {
+            var resource = resourceItem.ToObject<SocialServiceResource>();
+
+            var content = this.Create(resource.Name, categoryNodeId, resourceTypeAlias);
+            this.SetContentValues(content, resource);
+
+            return content;
+        }
+
+        public override IContent BuildContent(JToken resourceItem, IContent content)
+        {
+            var resource = resourceItem.ToObject<SocialServiceResource>();
+            this.SetContentValues(content, resource);
+
+            return content;
+        }
+
         private IResourceItemBase BuildResourceListItem(ISearchResult searchResult)
         {
             if (searchResult == null)
@@ -153,18 +182,24 @@ namespace CovidSupport.Api.Factories
             }
 
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(searchResult.GetValues("parentID").FirstOrDefault(), out int parentId);
+            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
             var category = this.GetSingleNodeName(parentId);
+            var icon = this.GetIcon(searchResult);
 
-            var serviceName = searchResult.GetValues("serviceName_" + this.Culture).FirstOrDefault();
-            var shortDescription = searchResult.GetValues("shortDescription_" + this.Culture).FirstOrDefault();
-            var region = this.GetNodesName(searchResult.GetValues("region").FirstOrDefault());
-            var address = searchResult.GetValues("streetAddress").FirstOrDefault();
-            var city = searchResult.GetValues("city").FirstOrDefault();
-            var stateList = searchResult.GetValues("state").FirstOrDefault();
+            var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
+            var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
+            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var address = this.GetResultValue(searchResult, "streetAddress");
+            var city = this.GetResultValue(searchResult, "city");
+            var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
-            var zip = searchResult.GetValues("zip").FirstOrDefault();
+            var zip = this.GetResultValue(searchResult, "zip");
+            var mapInfo = this.GetMapInfo(searchResult, "map");
             var tags = this.GetNodesName(searchResult.GetValues("tags").FirstOrDefault());
+            var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "needsTranslation").Select(x => x.Key).ToArray();
+            var optList = new List<string>();
+            optList.AddRange(tags);
+            optList.AddRange(options);
 
             return new SocialServiceResourceListItem()
             {
@@ -177,7 +212,11 @@ namespace CovidSupport.Api.Factories
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
-                Tags = tags
+                Tags = tags,
+                Options = optList.ToArray(),
+                Icon = icon,
+                Lat = mapInfo?.Lat,
+                Lon = mapInfo?.Lng,
             };
         }
 
@@ -214,6 +253,11 @@ namespace CovidSupport.Api.Factories
             }
 
             return phones;
+        }
+
+        private void SetContentValues(IContent content, SocialServiceResource resource)
+        {
+
         }
     }
 }

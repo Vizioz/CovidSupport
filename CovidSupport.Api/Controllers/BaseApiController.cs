@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
-using System.Web.Http.Cors;
 using CovidSupport.Api.Constants;
 using Examine;
 using Newtonsoft.Json;
@@ -103,6 +102,7 @@ namespace CovidSupport.Api.Controllers
             this.Configuration.Formatters.JsonFormatter.SerializerSettings.NullValueHandling = NullValueHandling.Ignore;
             this.Configuration.Formatters.JsonFormatter.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.Objects;            
             this.Configuration.Formatters.JsonFormatter.SupportedMediaTypes.Add(new MediaTypeHeaderValue("text/html"));
+            this.Configuration.Formatters.JsonFormatter.SerializerSettings.PreserveReferencesHandling = PreserveReferencesHandling.None;
 
             //this.Configuration.Formatters.JsonFormatter.UseDataContractJsonSerializer = true;
             //this.Configuration.Formatters.Remove(GlobalConfiguration.Configuration.Formatters.XmlFormatter);
