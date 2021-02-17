@@ -28,6 +28,7 @@ namespace CovidSupport.Api.Factories
             int.TryParse(searchResult.Id, out int id);
             int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
             var category = this.GetSingleNodeName(parentId);
+            var icon = this.GetIcon(searchResult);
 
             // Provider
             var providerName = this.GetResultCultureValueWithFallback(searchResult, "providerName");
@@ -66,6 +67,7 @@ namespace CovidSupport.Api.Factories
             var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
             var zip = this.GetResultValue(searchResult, "zip");
+            var mapInfo = this.GetMapInfo(searchResult, "map");
 
             // Opening Times
             var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
@@ -93,6 +95,9 @@ namespace CovidSupport.Api.Factories
 
             // Categories
             var tags = this.GetNodesName(this.GetResultValue(searchResult, "tags"));
+
+            // Options
+            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
 
             return new SocialServiceResource()
             {
@@ -127,13 +132,17 @@ namespace CovidSupport.Api.Factories
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
+                Lat = mapInfo?.Lat,
+                Lon = mapInfo?.Lng,
                 Status = status,
                 OpenHours = openingHours.Where(x => x.Hours.Any()).ToList(),
                 HolidaysOpeningTimes = holidays,
                 SpecialHoursOpeningTimes = specialHours,
                 PopulationsServed = populations,
                 LanguagesSupported = languages,
-                Tags = tags
+                Tags = tags,
+                Options = options,
+                Icon = icon
             };
         }
 
@@ -175,6 +184,7 @@ namespace CovidSupport.Api.Factories
             int.TryParse(searchResult.Id, out int id);
             int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
             var category = this.GetSingleNodeName(parentId);
+            var icon = this.GetIcon(searchResult);
 
             var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
             var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
@@ -184,7 +194,12 @@ namespace CovidSupport.Api.Factories
             var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
             var zip = this.GetResultValue(searchResult, "zip");
+            var mapInfo = this.GetMapInfo(searchResult, "map");
             var tags = this.GetNodesName(searchResult.GetValues("tags").FirstOrDefault());
+            var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "needsTranslation").Select(x => x.Key).ToArray();
+            var optList = new List<string>();
+            optList.AddRange(tags);
+            optList.AddRange(options);
 
             return new SocialServiceResourceListItem()
             {
@@ -197,7 +212,11 @@ namespace CovidSupport.Api.Factories
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
-                Tags = tags
+                Tags = tags,
+                Options = optList.ToArray(),
+                Icon = icon,
+                Lat = mapInfo?.Lat,
+                Lon = mapInfo?.Lng,
             };
         }
 

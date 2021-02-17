@@ -8,7 +8,6 @@ using CovidSupport.Api.Factories;
 using CovidSupport.Api.Models;
 using Examine;
 using Examine.LuceneEngine.Search;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core;
 using Umbraco.Core.Models;
@@ -359,7 +358,7 @@ namespace CovidSupport.Api.Controllers
                 {
                     findCategory = category;
                 }
-                else if (category.Subcategories.Any())
+                else if (category.Subcategories != null && category.Subcategories.Any())
                 {
                     findCategory = this.FindInCategoryTree(category.Subcategories, id);
                 }

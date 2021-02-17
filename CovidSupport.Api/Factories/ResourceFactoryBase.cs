@@ -148,5 +148,27 @@ namespace CovidSupport.Api.Factories
         {
             return this.contentService.Create(name, parentId, alias);
         }
+
+        protected MapInfo GetMapInfo(ISearchResult searchResult, string mapPropertyAlias)
+        {
+            var map = this.GetResultValue(searchResult, mapPropertyAlias);
+            var mapInfo = map != null ? JsonConvert.DeserializeObject<MapInfo>(map) : new MapInfo();
+
+            return mapInfo;
+        }
+
+        protected string GetIcon(ISearchResult searchResult)
+        {
+            var icon = this.GetResultValue(searchResult, "icon");
+
+            if (!string.IsNullOrEmpty(icon) && icon.StartsWith("icon-fa"))
+            {
+                return icon.Split(' ')[0].Replace("icon-", string.Empty);
+            }
+            else
+            {
+                return null;
+            }
+        }
     }
 }

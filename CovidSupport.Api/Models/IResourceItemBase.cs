@@ -19,5 +19,13 @@
         string[] Region { get; set; }
 
         string Category { get; set; }
+
+        string[] Options { get; set; }
+
+        string Icon { get; set; }
+
+        double? Lat { get; set; }
+
+        double? Lon { get; set; }
     }
 }

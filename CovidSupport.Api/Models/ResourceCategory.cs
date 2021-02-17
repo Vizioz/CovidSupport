@@ -8,6 +8,8 @@ namespace CovidSupport.Api.Models
 
         public string Name { get; set; }
 
+        public string Code { get; set; }
+
         public IEnumerable<ResourceCategory> Subcategories { get; set; }
     }
 }

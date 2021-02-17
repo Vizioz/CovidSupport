@@ -20,6 +20,14 @@
 
         public string Category { get; set; }
 
+        public string[] Options { get; set; }
+
+        public string Icon { get; set; }
+
+        public double? Lat { get; set; }
+
+        public double? Lon { get; set; }
+
         public string[] Tags { get; set; }        
     }
 }

@@ -32,16 +32,20 @@
         accessToken: 'pk.eyJ1IjoibWlndWVsbG9wZXo2IiwiYSI6ImNrOXd3a3NhZDA5eGkzZ284dXl5ZnI3NXUifQ.HehSLVuVEqpaa8ukk44NwA'
     }).addTo(mymap);
     var marker = L.marker([35.929903, -79.026481], { draggable: true, autoPan: true }).addTo(mymap);
-    marker.on("dragend", function (r) { console.log("drag end"); console.log(r.target._latlng); });
-
-    var xhttp = new XMLHttpRequest();
-    xhttp.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            console.log(this);
-        }
-    };
-    xhttp.open("GET", "https://localhost:44320/api/v1/resource/getbyregion/1304", true);
-    xhttp.send();
+    marker.on("dragend", function (r) { console.log("drag end"); console.log(r.target._latlng); });    
 </script>*@
+    <script>
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                console.log(this.response);
+            } else {
+                console.log(this)
+            }
+        };
+        xhttp.open("GET", "https://nccovid.vizioz.com/api/v1/resource/settings");
+        xhttp.setRequestHeader("Content-Type", "application/json");
+        xhttp.send(JSON.stringify({ id: 3, val: "noval" }));
+    </script>
 </body>
 </html>

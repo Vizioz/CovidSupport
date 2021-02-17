@@ -5,7 +5,6 @@ using System.Net.Http.Headers;
 using System.Threading;
 using System.Web.Http;
 using System.Web.Http.Controllers;
-using System.Web.Http.Cors;
 using CovidSupport.Api.Constants;
 using Examine;
 using Newtonsoft.Json;
