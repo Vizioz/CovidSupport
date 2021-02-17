@@ -35,6 +35,7 @@ namespace CovidSupport.Api.Factories
             var providerAddLoc = this.GetResultValue(searchResult, "providerAddLoc");
             var free = this.GetResultBooleanValue(searchResult, "free");
             var description = this.GetResultValue(searchResult, "cuisine");
+            var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
 
             // Location
             var address = this.GetResultValue(searchResult, "address");
@@ -96,8 +97,9 @@ namespace CovidSupport.Api.Factories
                 Zip = zip,
                 Region = region,
                 Category = category,
+                ClassificationType = classificationType,
                 Lat = mapInfo?.Lat,
-                Lon = mapInfo?.Lng,
+                Lng = mapInfo?.Lng,
                 Options = options,
                 Icon = icon,
                 ProviderAddLoc = providerAddLoc,
@@ -158,6 +160,7 @@ namespace CovidSupport.Api.Factories
             var icon = this.GetIcon(searchResult);
 
             var providerName = this.GetResultValue(searchResult, "providerName");
+            var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
             var description = this.GetResultValue(searchResult, "cuisine");
             var address = this.GetResultValue(searchResult, "address");
             var city = this.GetResultValue(searchResult, "city");
@@ -179,8 +182,9 @@ namespace CovidSupport.Api.Factories
                 Zip = zip,
                 Region = region,
                 Category = category,
+                ClassificationType = classificationType,
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
-                Lon = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
+                Lng = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options,
                 Icon = icon
             };

@@ -199,13 +199,13 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>03/12/2020 10:17:22</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll">
-      <publishTime>02/12/2021 16:04:22</publishTime>
+      <publishTime>02/17/2021 11:21:34</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll.config">
       <publishTime>02/03/2021 17:20:08</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.pdb">
-      <publishTime>02/12/2021 16:04:22</publishTime>
+      <publishTime>02/17/2021 11:21:34</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.dll">
       <publishTime>02/12/2021 16:04:22</publishTime>
@@ -217,10 +217,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>02/12/2021 16:04:22</publishTime>
     </File>
     <File Include="bin/CovidSupport.dll">
-      <publishTime>02/12/2021 16:04:23</publishTime>
+      <publishTime>02/17/2021 11:22:45</publishTime>
     </File>
     <File Include="bin/CovidSupport.pdb">
-      <publishTime>02/12/2021 16:04:23</publishTime>
+      <publishTime>02/17/2021 11:22:45</publishTime>
     </File>
     <File Include="bin/CSharpTest.Net.Collections.dll">
       <publishTime>09/06/2014 14:06:32</publishTime>
@@ -6262,7 +6262,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>09/01/2020 12:02:17</publishTime>
     </File>
     <File Include="Views/Website.cshtml">
-      <publishTime>02/12/2021 14:35:59</publishTime>
+      <publishTime>02/17/2021 11:19:44</publishTime>
     </File>
     <File Include="Web.config">
       <publishTime>02/12/2021 16:04:24</publishTime>

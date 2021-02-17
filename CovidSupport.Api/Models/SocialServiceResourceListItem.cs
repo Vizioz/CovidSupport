@@ -20,13 +20,15 @@
 
         public string Category { get; set; }
 
+        public string ClassificationType { get; set; }
+
         public string[] Options { get; set; }
 
         public string Icon { get; set; }
 
         public double? Lat { get; set; }
 
-        public double? Lon { get; set; }
+        public double? Lng { get; set; }
 
         public string[] Tags { get; set; }        
     }
