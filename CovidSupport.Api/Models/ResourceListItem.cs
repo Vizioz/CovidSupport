@@ -7,8 +7,6 @@ namespace CovidSupport.Api.Models
 
         public string Name { get; set; }
 
-        public string Description { get; set; }
-
         public string Address { get; set; }
 
         public string City { get; set; }
@@ -24,6 +22,8 @@ namespace CovidSupport.Api.Models
         public string ClassificationType { get; set; }
 
         public string[] Options { get; set; }
+
+        public bool IsOpen { get; set; }
 
         public string Icon { get; set; }
 

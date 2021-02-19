@@ -123,6 +123,15 @@ by editing this MSBuild file. In order to learn more about this please visit htt
     <File Include="App_Plugins/FontAwesomeIconPack/package.manifest">
       <publishTime>09/01/2020 12:02:01</publishTime>
     </File>
+    <File Include="App_Plugins/IconListLayout/iconlistlayout.controller.js">
+      <publishTime>02/17/2021 18:38:49</publishTime>
+    </File>
+    <File Include="App_Plugins/IconListLayout/iconlistlayout.html">
+      <publishTime>02/17/2021 19:06:28</publishTime>
+    </File>
+    <File Include="App_Plugins/IconListLayout/package.manifest">
+      <publishTime>02/17/2021 18:37:03</publishTime>
+    </File>
     <File Include="App_Plugins/LeafletMap/css/leafletmap.css">
       <publishTime>08/13/2020 09:19:44</publishTime>
     </File>
@@ -199,13 +208,13 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>03/12/2020 10:17:22</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll">
-      <publishTime>02/17/2021 11:21:34</publishTime>
+      <publishTime>02/18/2021 13:06:29</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll.config">
       <publishTime>02/03/2021 17:20:08</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.pdb">
-      <publishTime>02/17/2021 11:21:34</publishTime>
+      <publishTime>02/18/2021 13:06:29</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.dll">
       <publishTime>02/12/2021 16:04:22</publishTime>
@@ -217,10 +226,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>02/12/2021 16:04:22</publishTime>
     </File>
     <File Include="bin/CovidSupport.dll">
-      <publishTime>02/17/2021 11:22:45</publishTime>
+      <publishTime>02/18/2021 13:06:30</publishTime>
     </File>
     <File Include="bin/CovidSupport.pdb">
-      <publishTime>02/17/2021 11:22:45</publishTime>
+      <publishTime>02/18/2021 13:06:30</publishTime>
     </File>
     <File Include="bin/CSharpTest.Net.Collections.dll">
       <publishTime>09/06/2014 14:06:32</publishTime>
@@ -6262,10 +6271,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>09/01/2020 12:02:17</publishTime>
     </File>
     <File Include="Views/Website.cshtml">
-      <publishTime>02/17/2021 11:19:44</publishTime>
+      <publishTime>02/18/2021 13:05:22</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>02/12/2021 16:04:24</publishTime>
+      <publishTime>02/18/2021 13:06:31</publishTime>
     </File>
   </ItemGroup>
 </Project>

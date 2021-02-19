@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CovidSupport.Api.Models
 {
@@ -7,8 +8,6 @@ namespace CovidSupport.Api.Models
         public int Id { get; set; }
 
         public string Name { get; set; }
-
-        public string Description { get; set; }
 
         public string Address { get; set; }
 
@@ -26,6 +25,8 @@ namespace CovidSupport.Api.Models
 
         public string[] Options { get; set; }
 
+        public bool IsOpen { get; set; }
+
         public string Icon { get; set; }
 
         public List<OpeningTimes> OpenHours { get; set; }
@@ -42,7 +43,9 @@ namespace CovidSupport.Api.Models
 
         public string Facebook { get; set; }
 
-        public bool Free { get; set; }        
+        public bool Free { get; set; }
+
+        public DateTime LastUpdate { get; set; }
 
         public double? Lat { get; set; }
 

@@ -6,8 +6,6 @@
 
         string Name { get; set; }
 
-        string Description { get; set; }
-
         string Address { get; set; }
 
         string City { get; set; }
@@ -23,6 +21,8 @@
         string ClassificationType { get; set; }
 
         string[] Options { get; set; }
+
+        bool IsOpen { get; set; }
 
         string Icon { get; set; }
 

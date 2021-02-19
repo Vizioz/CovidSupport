@@ -72,6 +72,7 @@ namespace CovidSupport.Api.Controllers
             try
             {
                 IEnumerable<IResourceItemBase> items;
+                string highlightFilters;
                 var categories = this.GetCategories();
                 var category = this.FindInCategoryTree(categories, id);
 
@@ -79,13 +80,15 @@ namespace CovidSupport.Api.Controllers
                 {
                     var results = this.Index.GetSearcher().CreateQuery("content").Field("parentID", category.Id.ToString()).Execute();
                     items = this.BuildResourceList(results).ToList();
+                    var filters = this.GetFiltersForCategory(category);
+                    highlightFilters = string.Join(",", filters.Select(filter => filter.FilterAlias));
                 }
                 else
                 {
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Category not found.");
                 }
                 
-                return this.Request.CreateResponse(HttpStatusCode.OK, items);
+                return this.Request.CreateResponse(HttpStatusCode.OK, new { markers = items, highlightFilters = highlightFilters });
             }
             catch (ApiNotFoundException e)
             {
@@ -433,6 +436,23 @@ namespace CovidSupport.Api.Controllers
         private string GetProviderName(ISearchResult result)
         {
             return ResourceFactoryProvider.GetResourceFactoryName(result.GetValues("__NodeTypeAlias").FirstOrDefault());
+        }
+
+        private IEnumerable<HighlightFilter> GetFiltersForCategory(ResourceCategory category)
+        {
+            var categoryFiltersIds = this.Umbraco.Content(category.Id).Value<IEnumerable<IPublishedContent>>("highlightFilters").Select(x => x.Id);
+            var filters = this.GetFilters().Where(filter => categoryFiltersIds.Contains(filter.Id));
+            
+            return filters;
+        }
+
+        private IEnumerable<HighlightFilter> GetFilters()
+        {
+            var filtersNode = this.Website.DescendantOfType("highlightFilters");
+
+            return filtersNode != null
+                ? filtersNode.DescendantsOfType("highlightFilter").Select(x => new HighlightFilter { Id = x.Id, Name = x.Name, FilterAlias = x.Value<string>("filterAlias") })
+                : new List<HighlightFilter>();
         }
     }
 }
