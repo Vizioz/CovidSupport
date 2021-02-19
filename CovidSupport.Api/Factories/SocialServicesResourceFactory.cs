@@ -26,9 +26,9 @@ namespace CovidSupport.Api.Factories
 
             // Id
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
-            var category = this.GetSingleNodeName(parentId);
+            var category = this.GetNodeContentTypeAlias(id);
             var icon = this.GetIcon(searchResult);
+            var updateDate = this.GetNode(id).UpdateDate;
 
             // Provider
             var providerName = this.GetResultCultureValueWithFallback(searchResult, "providerName");
@@ -73,18 +73,9 @@ namespace CovidSupport.Api.Factories
             // Opening Times
             var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
             var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList)[0] : string.Empty;
-
-            var openingHours = new List<OpeningTimes>
-            {
-                this.GetDayOpeningTimes("monday", this.GetResultValue(searchResult, "monday")),
-                this.GetDayOpeningTimes("tuesday", this.GetResultValue(searchResult, "tuesday")),
-                this.GetDayOpeningTimes("wednesday", this.GetResultValue(searchResult, "wednesday")),
-                this.GetDayOpeningTimes("thursday", this.GetResultValue(searchResult, "thursday")),
-                this.GetDayOpeningTimes("friday", this.GetResultValue(searchResult, "friday")),
-                this.GetDayOpeningTimes("saturday", this.GetResultValue(searchResult, "saturday")),
-                this.GetDayOpeningTimes("sunday", this.GetResultValue(searchResult, "sunday"))
-            };
-
+            var open = !string.Equals(status, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase) 
+                && !string.Equals(status, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
+            var openingHours = this.GetOpeningTimes(searchResult);
             var holidays = this.GetResultCultureValueWithFallback(searchResult, "holidays");
             var specialHours = this.GetResultCultureValueWithFallback(searchResult, "specialHours");
 
@@ -98,7 +89,12 @@ namespace CovidSupport.Api.Factories
             var tags = this.GetNodesName(this.GetResultValue(searchResult, "tags"));
 
             // Options
-            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
+            var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "needsTranslation" && x.Key != "sortOrder").Select(x => x.Key.ToLowerInvariant()).ToList();
+
+            if (!string.IsNullOrEmpty(specialHours))
+            {
+                options.Add("seniorhours");
+            }
 
             return new SocialServiceResource()
             {
@@ -138,13 +134,15 @@ namespace CovidSupport.Api.Factories
                 Lng = mapInfo?.Lng,
                 Status = status,
                 OpenHours = openingHours.Where(x => x.Hours.Any()).ToList(),
-                HolidaysOpeningTimes = holidays,
-                SpecialHoursOpeningTimes = specialHours,
+                HolidaysHours = holidays,
+                SpecialHours = specialHours,
                 PopulationsServed = populations,
                 LanguagesSupported = languages,
                 Tags = tags,
-                Options = options,
-                Icon = icon
+                Options = options.ToArray(),
+                IsOpen = open,
+                Icon = icon,
+                LastUpdate = updateDate
             };
         }
 
@@ -184,12 +182,10 @@ namespace CovidSupport.Api.Factories
             }
 
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
-            var category = this.GetSingleNodeName(parentId);
+            var category = this.GetNodeContentTypeAlias(id);
             var icon = this.GetIcon(searchResult);
 
             var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
-            var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
             var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
             var address = this.GetResultValue(searchResult, "streetAddress");
@@ -199,16 +195,22 @@ namespace CovidSupport.Api.Factories
             var zip = this.GetResultValue(searchResult, "zip");
             var mapInfo = this.GetMapInfo(searchResult, "map");
             var tags = this.GetNodesName(searchResult.GetValues("tags").FirstOrDefault());
-            var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "needsTranslation").Select(x => x.Key).ToArray();
-            var optList = new List<string>();
-            optList.AddRange(tags);
-            optList.AddRange(options);
+            var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "needsTranslation" && x.Key != "sortOrder").Select(x => x.Key.ToLowerInvariant()).ToList();
+            
+            if (!string.IsNullOrEmpty(this.GetResultCultureValueWithFallback(searchResult, "specialHours")))
+            {
+                options.Add("seniorhours");
+            }
+
+            var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
+            var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList)[0] : string.Empty;
+            var open = !string.Equals(status, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase)
+                && !string.Equals(status, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
 
             return new SocialServiceResourceListItem()
             {
                 Id = id,
                 Name = serviceName,
-                Description = shortDescription,
                 Region = region,
                 Category = category,
                 ClassificationType = classificationType,
@@ -217,7 +219,8 @@ namespace CovidSupport.Api.Factories
                 State = state.Length > 0 ? state[0] : null,
                 Zip = zip,
                 Tags = tags,
-                Options = optList.ToArray(),
+                Options = options.ToArray(),
+                IsOpen = open,
                 Icon = icon,
                 Lat = mapInfo?.Lat,
                 Lng = mapInfo?.Lng,

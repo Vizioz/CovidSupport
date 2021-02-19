@@ -26,16 +26,21 @@ namespace CovidSupport.Api.Factories
 
             // Id
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
-            var category = this.GetSingleNodeName(parentId);
+            var category = this.GetNodeContentTypeAlias(id);
             var icon = this.GetIcon(searchResult);
+            var updateDate = this.GetNode(id).UpdateDate;
+            var open = !this.GetResultBooleanValue(searchResult, "businessClosed");
 
             // Provider
             var providerName = this.GetResultValue(searchResult, "providerName");
             var providerAddLoc = this.GetResultValue(searchResult, "providerAddLoc");
             var free = this.GetResultBooleanValue(searchResult, "free");
-            var description = this.GetResultValue(searchResult, "cuisine");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
+
+            if (string.IsNullOrEmpty(classificationType))
+            {
+                classificationType = this.GetResultValue(searchResult, "cuisine");
+            }
 
             // Location
             var address = this.GetResultValue(searchResult, "address");
@@ -47,27 +52,8 @@ namespace CovidSupport.Api.Factories
             var mapInfo = this.GetMapInfo(searchResult, "map");
 
             // Opening Times
-            var openingHours = new List<OpeningTimes>
-            {
-                this.GetDayOpeningTimes("monday", this.GetResultValue(searchResult, "monday")),
-                this.GetDayOpeningTimes("tuesday", this.GetResultValue(searchResult, "tuesday")),
-                this.GetDayOpeningTimes("wednesday", this.GetResultValue(searchResult, "wednesday")),
-                this.GetDayOpeningTimes("thursday", this.GetResultValue(searchResult, "thursday")),
-                this.GetDayOpeningTimes("friday", this.GetResultValue(searchResult, "friday")),
-                this.GetDayOpeningTimes("saturday", this.GetResultValue(searchResult, "saturday")),
-                this.GetDayOpeningTimes("sunday", this.GetResultValue(searchResult, "sunday"))
-            };
-
-            var specialHours = new List<OpeningTimes>
-            {
-                this.GetDayOpeningTimes("monday", this.GetResultValue(searchResult, "spMonday")),
-                this.GetDayOpeningTimes("tuesday", this.GetResultValue(searchResult, "spTuesday")),
-                this.GetDayOpeningTimes("wednesday", this.GetResultValue(searchResult, "spWednesday")),
-                this.GetDayOpeningTimes("thursday", this.GetResultValue(searchResult, "spThursday")),
-                this.GetDayOpeningTimes("friday", this.GetResultValue(searchResult, "spFriday")),
-                this.GetDayOpeningTimes("saturday", this.GetResultValue(searchResult, "spSaturday")),
-                this.GetDayOpeningTimes("sunday", this.GetResultValue(searchResult, "spSunday"))
-            };
+            var openingHours = this.GetOpeningTimes(searchResult).Where(x => x.Hours.Any());
+            var specialHours = this.GetOpeningTimes(searchResult, "sp").Where(x => x.Hours.Any());
 
             // Contact
             var contact = this.GetResultValue(searchResult, "contact");
@@ -84,13 +70,17 @@ namespace CovidSupport.Api.Factories
             var notes = this.GetResultCultureValueWithFallback(searchResult, "notes");
 
             // Options
-            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
+            var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "status" &&x.Key != "businessClosed" && x.Key != "sortOrder").Select(x => x.Key.ToLowerInvariant()).ToList();
+
+            if (specialHours.Any())
+            {
+                options.Add("specialhours");
+            }
 
             return new Resource
             {
                 Id = id,
                 Name = providerName,
-                Description = description,
                 Address = address,
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
@@ -100,12 +90,13 @@ namespace CovidSupport.Api.Factories
                 ClassificationType = classificationType,
                 Lat = mapInfo?.Lat,
                 Lng = mapInfo?.Lng,
-                Options = options,
+                Options = options.ToArray(),
+                IsOpen = open,
                 Icon = icon,
                 ProviderAddLoc = providerAddLoc,
                 Free = free,
-                OpenHours = openingHours.Where(x => x.Hours.Any()).ToList(),
-                SpecialHours = specialHours.Where(x => x.Hours.Any()).ToList(),
+                OpenHours = openingHours.ToList(),
+                SpecialHours = specialHours.ToList(),
                 Contact = contact,
                 ContactSpanish = contactSpanish,
                 Email = email,
@@ -115,7 +106,8 @@ namespace CovidSupport.Api.Factories
                 Facebook = facebook,
                 Instructions = instructions,
                 Offers = offers,
-                Notes = notes
+                Notes = notes,
+                LastUpdate = updateDate
             };
         }
 
@@ -155,13 +147,18 @@ namespace CovidSupport.Api.Factories
             }
 
             int.TryParse(searchResult.Id, out int id);
-            int.TryParse(this.GetResultValue(searchResult, "parentID"), out int parentId);
-            var category = this.GetSingleNodeName(parentId);
+            var category = this.GetNodeContentTypeAlias(id);
             var icon = this.GetIcon(searchResult);
+            var open = !this.GetResultBooleanValue(searchResult, "businessClosed");
 
             var providerName = this.GetResultValue(searchResult, "providerName");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
-            var description = this.GetResultValue(searchResult, "cuisine");
+
+            if (string.IsNullOrEmpty(classificationType))
+            {
+                classificationType = this.GetResultValue(searchResult, "cuisine");
+            }
+            
             var address = this.GetResultValue(searchResult, "address");
             var city = this.GetResultValue(searchResult, "city");
             var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
@@ -169,13 +166,17 @@ namespace CovidSupport.Api.Factories
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
             var zip = this.GetResultValue(searchResult, "zip");
             var mapInfo = this.GetMapInfo(searchResult, "map");
-            var options = searchResult.Values.Where(x => x.Value == "1").Select(x => x.Key).ToArray();
-            
+            var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "status" && x.Key != "businessClosed" && x.Key != "sortOrder").Select(x => x.Key.ToLowerInvariant()).ToList();
+
+            if (this.GetOpeningTimes(searchResult, "sp").Any(x => x.Hours.Any()))
+            {
+                options.Add("specialhours");
+            }
+
             return new ResourceListItem
             {
                 Id = id,
                 Name = providerName,
-                Description = description,
                 Address = address,
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
@@ -185,7 +186,8 @@ namespace CovidSupport.Api.Factories
                 ClassificationType = classificationType,
                 Lat = mapInfo?.LatLng?.Length > 0 ? mapInfo.LatLng[0] : (double?)null,
                 Lng = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
-                Options = options,
+                Options = options.ToArray(),
+                IsOpen = open,
                 Icon = icon
             };
         }
@@ -195,7 +197,6 @@ namespace CovidSupport.Api.Factories
             this.SetPropertyValue(content, "providerName", resource.Name);
             this.SetPropertyValue(content, "providerAddLoc", resource.ProviderAddLoc);
             this.SetPropertyValue(content, "free", resource.Free);
-            this.SetPropertyValue(content, "description", resource.Description);
 
             this.SetPropertyValue(content, "address", resource.Address);
             this.SetPropertyValue(content, "city", resource.City);

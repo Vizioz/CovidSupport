@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace CovidSupport.Api.Models
 {
@@ -19,5 +20,7 @@ namespace CovidSupport.Api.Models
         string Facebook { get; set; }
 
         bool Free { get; set; }
+
+        DateTime LastUpdate { get; set; }
     }
 }

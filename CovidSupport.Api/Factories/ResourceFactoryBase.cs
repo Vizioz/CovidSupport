@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Umbraco.Core.Models;
+using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Core.Services;
 using Umbraco.Web;
 
@@ -39,6 +40,30 @@ namespace CovidSupport.Api.Factories
 
         public abstract IContent BuildContent(JToken resourceItem, IContent content);
 
+        protected IEnumerable<OpeningTimes> GetOpeningTimes(ISearchResult searchResult, string aliasPrefix = "")
+        {
+            var monLabel = !string.IsNullOrEmpty(aliasPrefix) ? aliasPrefix + "Monday" : "monday";
+            var tuesLabel = !string.IsNullOrEmpty(aliasPrefix) ? aliasPrefix + "Tuesday" : "tuesday";
+            var wedLabel = !string.IsNullOrEmpty(aliasPrefix) ? aliasPrefix + "Wednesday" : "wednesday";
+            var thursLabel = !string.IsNullOrEmpty(aliasPrefix) ? aliasPrefix + "Thursday" : "thursday";
+            var friLabel = !string.IsNullOrEmpty(aliasPrefix) ? aliasPrefix + "Friday" : "friday";
+            var satLabel = !string.IsNullOrEmpty(aliasPrefix) ? aliasPrefix + "Saturday" : "saturday";
+            var sunLabel = !string.IsNullOrEmpty(aliasPrefix) ? aliasPrefix + "Sunday" : "sunday";
+
+            var openingHours = new List<OpeningTimes>
+            {
+                this.GetDayOpeningTimes("monday", this.GetResultValue(searchResult, monLabel)),
+                this.GetDayOpeningTimes("tuesday", this.GetResultValue(searchResult, tuesLabel)),
+                this.GetDayOpeningTimes("wednesday", this.GetResultValue(searchResult, wedLabel)),
+                this.GetDayOpeningTimes("thursday", this.GetResultValue(searchResult, thursLabel)),
+                this.GetDayOpeningTimes("friday", this.GetResultValue(searchResult, friLabel)),
+                this.GetDayOpeningTimes("saturday", this.GetResultValue(searchResult, satLabel)),
+                this.GetDayOpeningTimes("sunday", this.GetResultValue(searchResult, sunLabel))
+            };
+
+            return openingHours;
+        }
+
         protected OpeningTimes GetDayOpeningTimes(string day, string str)
         {
             var openingTimes = new OpeningTimes(day);
@@ -55,16 +80,19 @@ namespace CovidSupport.Api.Factories
 
                 foreach (var openingHoursVal in openingHoursArray)
                 {
+                    var title = openingHoursVal.Value<string>("title");
                     var startTime = openingHoursVal.Value<DateTime?>("startTime");
                     var endTime = openingHoursVal.Value<DateTime?>("endTime");
 
                     if (startTime != null || endTime != null)
                     {
-                        var startEndTime = new StartEndTime();
+                        var startEndTime = new StartEndTime { 
+                            Title = title
+                        };
 
                         if (startTime != null)
                         {
-                            startEndTime.StarTime = ((DateTime)startTime).ToString("HH:mm:ss");
+                            startEndTime.StartTime = ((DateTime)startTime).ToString("HH:mm:ss");
                         }
 
                         if (endTime != null)
@@ -95,7 +123,7 @@ namespace CovidSupport.Api.Factories
 
             var ids = str.Split(',');
 
-            return ids.Select(id => this.helper.Content(id)).Where(x => x != null).Select(x => x.Name).ToArray();
+            return ids.Select(id => this.GetNode(id)).Where(x => x != null).Select(x => x.Name).ToArray();
         }
 
         protected string GetSingleNodeName(string str)
@@ -105,7 +133,7 @@ namespace CovidSupport.Api.Factories
                 return string.Empty;
             }
 
-            return this.helper.Content(str.Split(',')[0])?.Name;
+            return this.GetNode(str.Split(',')[0])?.Name;
         }
 
         protected string GetSingleNodeName(int id)
@@ -115,7 +143,27 @@ namespace CovidSupport.Api.Factories
                 return string.Empty;
             }
 
-            return this.helper.Content(id)?.Name;
+            return this.GetNode(id)?.Name;
+        }
+
+        protected string GetNodeContentTypeAlias(int id)
+        {
+            if (id <= 0)
+            {
+                return string.Empty;
+            }
+
+            return this.GetNode(id)?.ContentType.Alias;
+        }
+
+        protected IPublishedContent GetNode(int id)
+        {
+            return this.helper.Content(id);
+        }
+
+        protected IPublishedContent GetNode(string id)
+        {
+            return this.helper.Content(id);
         }
 
         protected string GetResultValue (ISearchResult searchResult, string property)
