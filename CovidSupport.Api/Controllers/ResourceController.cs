@@ -440,7 +440,7 @@ namespace CovidSupport.Api.Controllers
 
         private IEnumerable<HighlightFilter> GetFiltersForCategory(ResourceCategory category)
         {
-            var categoryFiltersIds = this.Umbraco.Content(category.Id).Value<IEnumerable<IPublishedContent>>("highlightFilters").Select(x => x.Id);
+            var categoryFiltersIds = this.Umbraco.Content(category.Id).Value<IEnumerable<IPublishedContent>>("highlightFilters")?.Select(x => x.Id) ?? new List<int>();
             var filters = this.GetFilters().Where(filter => categoryFiltersIds.Contains(filter.Id));
             
             return filters;

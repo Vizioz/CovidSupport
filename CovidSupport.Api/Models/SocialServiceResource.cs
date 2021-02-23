@@ -9,6 +9,8 @@ namespace CovidSupport.Api.Models
 
         public string Name { get; set; }
 
+        public string ProviderAddLoc { get; set; }
+
         public string Description { get; set; }
 
         public string Address { get; set; }
@@ -52,8 +54,6 @@ namespace CovidSupport.Api.Models
         public bool Free { get; set; }
 
         public DateTime LastUpdate { get; set; }
-
-        public string ServiceProviderName { get; set; }
 
         public string LongDescription { get; set; }
 

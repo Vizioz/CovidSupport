@@ -152,6 +152,7 @@ namespace CovidSupport.Api.Factories
             var open = !this.GetResultBooleanValue(searchResult, "businessClosed");
 
             var providerName = this.GetResultValue(searchResult, "providerName");
+            var providerAddLoc = this.GetResultValue(searchResult, "providerAddLoc");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
 
             if (string.IsNullOrEmpty(classificationType))
@@ -177,6 +178,7 @@ namespace CovidSupport.Api.Factories
             {
                 Id = id,
                 Name = providerName,
+                ProviderAddLoc = providerAddLoc,
                 Address = address,
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
