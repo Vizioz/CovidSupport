@@ -9,6 +9,8 @@ namespace CovidSupport.Api.Models
 
         public string Name { get; set; }
 
+        public string ProviderAddLoc { get; set; }
+
         public string Address { get; set; }
 
         public string City { get; set; }
@@ -50,8 +52,6 @@ namespace CovidSupport.Api.Models
         public double? Lat { get; set; }
 
         public double? Lng { get; set; }
-
-        public string ProviderAddLoc { get; set; }
 
         public List<OpeningTimes> SpecialHours { get; set; }
         

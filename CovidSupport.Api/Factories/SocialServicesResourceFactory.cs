@@ -72,9 +72,10 @@ namespace CovidSupport.Api.Factories
 
             // Opening Times
             var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
-            var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList)[0] : string.Empty;
-            var open = !string.Equals(status, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase) 
-                && !string.Equals(status, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
+            var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList) : new string[] { };
+            var statusVal = status.Length > 0 ? status[0] : string.Empty;
+            var open = !string.Equals(statusVal, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase) 
+                && !string.Equals(statusVal, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
             var openingHours = this.GetOpeningTimes(searchResult);
             var holidays = this.GetResultCultureValueWithFallback(searchResult, "holidays");
             var specialHours = this.GetResultCultureValueWithFallback(searchResult, "specialHours");
@@ -99,8 +100,8 @@ namespace CovidSupport.Api.Factories
             return new SocialServiceResource()
             {
                 Id = id,
-                Name = serviceName,
-                ServiceProviderName = providerName,
+                Name = providerName,
+                ProviderAddLoc = serviceName,
                 Description = shortDescription,
                 LongDescription = longDescription,
                 Eligibility = eligibility,
@@ -132,7 +133,7 @@ namespace CovidSupport.Api.Factories
                 Zip = zip,
                 Lat = mapInfo?.Lat,
                 Lng = mapInfo?.Lng,
-                Status = status,
+                Status = statusVal,
                 OpenHours = openingHours.Where(x => x.Hours.Any()).ToList(),
                 HolidaysHours = holidays,
                 SpecialHours = specialHours,
@@ -185,6 +186,7 @@ namespace CovidSupport.Api.Factories
             var category = this.GetNodeContentTypeAlias(id);
             var icon = this.GetIcon(searchResult);
 
+            var providerName = this.GetResultCultureValueWithFallback(searchResult, "providerName");
             var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
             var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
@@ -203,14 +205,16 @@ namespace CovidSupport.Api.Factories
             }
 
             var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
-            var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList)[0] : string.Empty;
-            var open = !string.Equals(status, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase)
-                && !string.Equals(status, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
+            var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList) : new string[] { };
+            var statusVal = status.Length > 0 ? status[0] : string.Empty;
+            var open = !string.Equals(statusVal, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase)
+                && !string.Equals(statusVal, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
 
             return new SocialServiceResourceListItem()
             {
                 Id = id,
-                Name = serviceName,
+                Name = providerName,
+                ProviderAddLoc = serviceName,
                 Region = region,
                 Category = category,
                 ClassificationType = classificationType,
