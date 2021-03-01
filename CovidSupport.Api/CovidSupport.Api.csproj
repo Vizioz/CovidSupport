@@ -298,6 +298,7 @@
     <Compile Include="Factories\ResourceFactoryBase.cs" />
     <Compile Include="Factories\ResourceFactoryProvider.cs" />
     <Compile Include="Factories\SocialServicesResourceFactory.cs" />
+    <Compile Include="Models\CategoryResources.cs" />
     <Compile Include="Models\HighlightFilter.cs" />
     <Compile Include="Models\IResourceItem.cs" />
     <Compile Include="Models\ApiNotFoundException.cs" />

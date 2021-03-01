@@ -73,6 +73,7 @@ namespace CovidSupport.Api.Controllers
             {
                 IEnumerable<IResourceItemBase> items;
                 string highlightFilters;
+                bool showListOnly;
                 var categories = this.GetCategories();
                 var category = this.FindInCategoryTree(categories, id);
 
@@ -82,13 +83,21 @@ namespace CovidSupport.Api.Controllers
                     items = this.BuildResourceList(results).ToList();
                     var filters = this.GetFiltersForCategory(category);
                     highlightFilters = string.Join(",", filters.Select(filter => filter.FilterAlias));
+                    showListOnly = this.ShowListOnly(category);
                 }
                 else
                 {
                     return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Category not found.");
                 }
+
+                var resources = new CategoryResources
+                {
+                    Markers = items,
+                    HighlightFilters = highlightFilters,
+                    ShowListOnly = showListOnly
+                };
                 
-                return this.Request.CreateResponse(HttpStatusCode.OK, new { markers = items, highlightFilters = highlightFilters });
+                return this.Request.CreateResponse(HttpStatusCode.OK, resources);
             }
             catch (ApiNotFoundException e)
             {
@@ -453,6 +462,11 @@ namespace CovidSupport.Api.Controllers
             return filtersNode != null
                 ? filtersNode.DescendantsOfType("highlightFilter").Select(x => new HighlightFilter { Id = x.Id, Name = x.Name, FilterAlias = x.Value<string>("filterAlias") })
                 : new List<HighlightFilter>();
+        }
+
+        private bool ShowListOnly(ResourceCategory category)
+        {
+            return this.Umbraco.Content(category.Id).Value<bool>("showListOnly");
         }
     }
 }
