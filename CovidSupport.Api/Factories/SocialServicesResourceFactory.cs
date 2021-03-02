@@ -31,11 +31,23 @@ namespace CovidSupport.Api.Factories
             var updateDate = this.GetNode(id).UpdateDate;
 
             // Provider
-            var providerName = this.GetResultCultureValueWithFallback(searchResult, "providerName");
             var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
+            var providerName = this.GetResultCultureValueWithFallback(searchResult, "providerName");
             var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
             var longDescription = this.GetResultCultureValueWithFallback(searchResult, "longDescription");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
+
+            if (string.IsNullOrEmpty(serviceName))
+            {
+                if (string.IsNullOrEmpty(providerName))
+                {
+                    serviceName = this.GetResultCultureValueWithFallback(searchResult, "nodeName");
+                } else
+                {
+                    serviceName = providerName;
+                    providerName = null;
+                }
+            }
 
             // Access
             var eligibility = this.GetResultCultureValueWithFallback(searchResult, "eligibility");
@@ -100,8 +112,8 @@ namespace CovidSupport.Api.Factories
             return new SocialServiceResource()
             {
                 Id = id,
-                Name = providerName,
-                ProviderAddLoc = serviceName,
+                Name = serviceName,
+                ProviderAddLoc = providerName,
                 Description = shortDescription,
                 LongDescription = longDescription,
                 Eligibility = eligibility,
@@ -188,6 +200,20 @@ namespace CovidSupport.Api.Factories
 
             var providerName = this.GetResultCultureValueWithFallback(searchResult, "providerName");
             var serviceName = this.GetResultCultureValueWithFallback(searchResult, "serviceName");
+
+            if (string.IsNullOrEmpty(serviceName))
+            {
+                if (string.IsNullOrEmpty(providerName))
+                {
+                    serviceName = this.GetResultCultureValueWithFallback(searchResult, "nodeName");
+                }
+                else
+                {
+                    serviceName = providerName;
+                    providerName = null;
+                }
+            }
+
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
             var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
             var address = this.GetResultValue(searchResult, "streetAddress");
@@ -213,8 +239,8 @@ namespace CovidSupport.Api.Factories
             return new SocialServiceResourceListItem()
             {
                 Id = id,
-                Name = providerName,
-                ProviderAddLoc = serviceName,
+                Name = serviceName,
+                ProviderAddLoc = providerName,
                 Region = region,
                 Category = category,
                 ClassificationType = classificationType,
