@@ -21,16 +21,16 @@ namespace CovidSupport.Core.Components.ContentEvents
 
         public void Initialize()
         {
-            ContentService.Saved += this.ContentService_Saved;
+            ContentService.Published += this.ContentService_Published;
         }
 
         public void Terminate()
         {
         }
 
-        private void ContentService_Saved(Umbraco.Core.Services.IContentService sender, Umbraco.Core.Events.ContentSavedEventArgs e)
+        private void ContentService_Published(Umbraco.Core.Services.IContentService sender, Umbraco.Core.Events.ContentPublishedEventArgs e)
         {
-            foreach (var publishedItem in e.SavedEntities)
+            foreach (var publishedItem in e.PublishedEntities)
             {
                 if (publishedItem.ContentType.Alias == "website")
                 {
