@@ -19,7 +19,7 @@ namespace CovidSupport.Api.Models
 
         public string Zip { get; set; }
 
-        public string[] Region { get; set; }
+        public Region[] Region { get; set; }
 
         public string Category { get; set; }
 

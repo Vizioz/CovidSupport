@@ -8,6 +8,7 @@ using CovidSupport.Api.Factories;
 using CovidSupport.Api.Models;
 using Examine;
 using Examine.LuceneEngine.Search;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core;
 using Umbraco.Core.Models;
@@ -99,7 +100,8 @@ namespace CovidSupport.Api.Controllers
             {
                 IEnumerable<IResourceItemBase> items;
                 string highlightFilters;
-                bool showListOnly;
+                bool showList;
+                bool showCounties;
                 var categories = this.GetCategories();
                 var category = this.FindInCategoryTree(categories, id);
 
@@ -107,9 +109,10 @@ namespace CovidSupport.Api.Controllers
                 {
                     var results = this.Index.GetSearcher().CreateQuery("content").Field("parentID", category.Id.ToString()).Execute();
                     items = this.BuildResourceList(results).ToList();
-                    var filters = this.GetFiltersForCategory(category);
-                    highlightFilters = string.Join(",", filters.Select(filter => filter.FilterAlias));
-                    showListOnly = this.ShowListOnly(category);
+                    var categoryNode = this.Umbraco.Content(category.Id);
+                    highlightFilters = this.GetFiltersForCategory(categoryNode);
+                    showList = this.ShowListFirst(categoryNode);
+                    showCounties = this.ShowCounties(categoryNode);
                 }
                 else
                 {
@@ -120,7 +123,8 @@ namespace CovidSupport.Api.Controllers
                 {
                     Markers = items,
                     HighlightFilters = highlightFilters,
-                    ShowListOnly = showListOnly
+                    ShowListFirst = showList,
+                    ShowCounties = showCounties
                 };
                 
                 return this.Request.CreateResponse(HttpStatusCode.OK, resources);
@@ -424,7 +428,7 @@ namespace CovidSupport.Api.Controllers
             var regionsNode = this.Website.DescendantOfType("regions");
 
             return regionsNode != null
-                ? regionsNode.Children.Select(x => new Region {Name = x.Name, Alias = x.UrlSegment})
+                ? regionsNode.Children.Select(x => new Region {Name = x.Name, Id = x.Value<string>("regionId")})
                 : new List<Region>();
         }
 
@@ -432,9 +436,11 @@ namespace CovidSupport.Api.Controllers
         {
             var regionsNode = this.Website.DescendantOfType("regions");
 
-            return regionsNode != null
-                ? regionsNode.Children.Select(x => new RegionPolygonData { Name = x.Name, Id = x.Value<string>("regionId"), AreaJson = x.Value<string>("areaJson") })
+            var regions = regionsNode != null
+                ? regionsNode.Children.Select(x => new RegionPolygonData { Name = x.Name, Id = x.Value<string>("regionId"), AreaJson = JsonConvert.DeserializeObject(x.Value<string>("areaJson")) })
                 : new List<RegionPolygonData>();
+
+            return regions.Where(x => x.AreaJson != null);
         }
 
         private IResourceItem BuildResource(ISearchResult searchResult)
@@ -475,12 +481,12 @@ namespace CovidSupport.Api.Controllers
             return ResourceFactoryProvider.GetResourceFactoryName(result.GetValues("__NodeTypeAlias").FirstOrDefault());
         }
 
-        private IEnumerable<HighlightFilter> GetFiltersForCategory(ResourceCategory category)
+        private string GetFiltersForCategory(IPublishedContent category)
         {
-            var categoryFiltersIds = this.Umbraco.Content(category.Id).Value<IEnumerable<IPublishedContent>>("highlightFilters")?.Select(x => x.Id) ?? new List<int>();
+            var categoryFiltersIds = category.Value<IEnumerable<IPublishedContent>>("highlightFilters")?.Select(x => x.Id) ?? new List<int>();
             var filters = this.GetFilters().Where(filter => categoryFiltersIds.Contains(filter.Id));
-            
-            return filters;
+
+            return string.Join(",", filters.Select(filter => filter.FilterAlias));
         }
 
         private IEnumerable<HighlightFilter> GetFilters()
@@ -492,9 +498,14 @@ namespace CovidSupport.Api.Controllers
                 : new List<HighlightFilter>();
         }
 
-        private bool ShowListOnly(ResourceCategory category)
+        private bool ShowListFirst(IPublishedContent category)
         {
-            return this.Umbraco.Content(category.Id).Value<bool>("showListOnly");
+            return category.Value<bool>("showListFirst");
+        }
+
+        private bool ShowCounties(IPublishedContent category)
+        {
+            return category.Value<bool>("showCounties");
         }
     }
 }

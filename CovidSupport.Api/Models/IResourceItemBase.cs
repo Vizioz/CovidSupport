@@ -16,7 +16,7 @@
 
         string Zip { get; set; }
 
-        string[] Region { get; set; }
+        Region[] Region { get; set; }
 
         string Category { get; set; }
 

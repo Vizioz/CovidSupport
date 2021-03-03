@@ -6,6 +6,6 @@
 
         public string Id { get; set; }
 
-        public string AreaJson { get; set; }
+        public object AreaJson { get; set; }
     }
 }

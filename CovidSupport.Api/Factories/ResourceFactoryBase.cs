@@ -166,6 +166,15 @@ namespace CovidSupport.Api.Factories
             return this.helper.Content(id);
         }
 
+        protected Region[] GetRegions(ISearchResult searchResult)
+        {
+            var ids = this.GetResultValue(searchResult, "region")?.Split(',') ?? new string[] { };
+            var regionNodes = ids.Select(id => this.GetNode(id)).Where(x => x != null);
+            var regions = regionNodes.Select(x => new Region { Name = x.Name, Id = x.Value<string>("regionId") });
+
+            return regions.ToArray();
+        }
+
         protected string GetResultValue (ISearchResult searchResult, string property)
         {
             return searchResult.GetValues(property).FirstOrDefault();
