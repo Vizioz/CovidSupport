@@ -8,6 +8,8 @@ namespace CovidSupport.Api.Models
 
         public string HighlightFilters { get; set; }
 
-        public bool ShowListOnly { get; set; }
+        public bool ShowListFirst { get; set; }
+
+        public bool ShowCounties { get; set; }
     }
 }

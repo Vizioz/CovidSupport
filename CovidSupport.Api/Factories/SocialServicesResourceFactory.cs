@@ -52,7 +52,7 @@ namespace CovidSupport.Api.Factories
             // Access
             var eligibility = this.GetResultCultureValueWithFallback(searchResult, "eligibility");
             var access = this.GetResultCultureValueWithFallback(searchResult, "resourceAccessNotes");
-            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var region = this.GetRegions(searchResult);
             var geographicRestrictions = this.GetResultCultureValueWithFallback(searchResult, "geographicRestrictions");
             var safeForUndocumentedIndividuals = this.GetResultBooleanValue(searchResult, "safeForUndocumentedIndividuals");
             var free = this.GetResultBooleanValue(searchResult, "free");
@@ -215,7 +215,7 @@ namespace CovidSupport.Api.Factories
             }
 
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
-            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var region = this.GetRegions(searchResult);
             var address = this.GetResultValue(searchResult, "streetAddress");
             var city = this.GetResultValue(searchResult, "city");
             var stateList = this.GetResultValue(searchResult, "state");

@@ -8,6 +8,7 @@ using CovidSupport.Api.Factories;
 using CovidSupport.Api.Models;
 using Examine;
 using Examine.LuceneEngine.Search;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Umbraco.Core;
 using Umbraco.Core.Models;
@@ -45,59 +46,14 @@ namespace CovidSupport.Api.Controllers
             }
         }
 
-        ////[HttpGet]
-        ////public HttpResponseMessage GetAll()
-        ////{
-        ////    try
-        ////    {
-        ////        var results = this.Searcher.CreateQuery("content").All().Execute();
-
-        ////        var items = results.Select(this.BuildResourceListItem);
-
-        ////        return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
-        ////    }
-        ////    catch (ApiNotFoundException e)
-        ////    {
-        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-        ////    }
-        ////    catch (Exception e)
-        ////    {
-        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
-        ////    }
-        ////}
-
         [HttpGet]
-        public HttpResponseMessage GetByCategory(int id)
+        public HttpResponseMessage GetRegionsArea()
         {
             try
             {
-                IEnumerable<IResourceItemBase> items;
-                string highlightFilters;
-                bool showListOnly;
-                var categories = this.GetCategories();
-                var category = this.FindInCategoryTree(categories, id);
+                var regions = this.GetRegionsPolygonData();
 
-                if (category != null)
-                {
-                    var results = this.Index.GetSearcher().CreateQuery("content").Field("parentID", category.Id.ToString()).Execute();
-                    items = this.BuildResourceList(results).ToList();
-                    var filters = this.GetFiltersForCategory(category);
-                    highlightFilters = string.Join(",", filters.Select(filter => filter.FilterAlias));
-                    showListOnly = this.ShowListOnly(category);
-                }
-                else
-                {
-                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Category not found.");
-                }
-
-                var resources = new CategoryResources
-                {
-                    Markers = items,
-                    HighlightFilters = highlightFilters,
-                    ShowListOnly = showListOnly
-                };
-                
-                return this.Request.CreateResponse(HttpStatusCode.OK, resources);
+                return this.Request.CreateResponse(HttpStatusCode.OK, regions);
             }
             catch (ApiNotFoundException e)
             {
@@ -109,46 +65,6 @@ namespace CovidSupport.Api.Controllers
             }
         }
 
-        [HttpGet]
-        public HttpResponseMessage GetByRegion(string id)
-        {
-            try
-            {
-                IEnumerable<IResourceItemBase> items;
-
-                var regionNode = int.TryParse(id, out int intId)
-                    ? this.Website.DescendantOfType("regions").FirstChild(x => x.Id == intId)
-                    : this.Website.DescendantOfType("regions").FirstChild(x => x.UrlSegment == id);
-
-                if (regionNode != null)
-                {
-                    var searcher = this.Index.GetSearcher();
-
-                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
-                    query.QueryParser.AllowLeadingWildcard = true;
-
-                    var val = "*" + regionNode.Key.ToString().Replace("-", string.Empty);
-                    var results = query.Field("region", val.MultipleCharacterWildcard()).Execute();
-
-                    items = this.BuildResourceList(results);
-                }
-                else
-                {
-                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Region not found.");
-                }
-
-                return this.Request.CreateResponse(HttpStatusCode.OK, items);
-            }
-            catch (ApiNotFoundException e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-            }
-            catch (Exception e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
-            }
-        }
-        
         [HttpGet]
         public HttpResponseMessage Get(int id)
         {
@@ -178,32 +94,40 @@ namespace CovidSupport.Api.Controllers
         }
 
         [HttpGet]
-        public HttpResponseMessage GetByTag(int tagId)
+        public HttpResponseMessage GetByCategory(int id)
         {
             try
             {
                 IEnumerable<IResourceItemBase> items;
+                string highlightFilters;
+                bool showList;
+                bool showCounties;
+                var categories = this.GetCategories();
+                var category = this.FindInCategoryTree(categories, id);
 
-                var tagNode = this.Website.DescendantOfType("resourceTags").FirstChild(x => x.Id == tagId);
-
-                if (tagNode != null)
+                if (category != null)
                 {
-                    var searcher = this.Index.GetSearcher();
-
-                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
-                    query.QueryParser.AllowLeadingWildcard = true;
-
-                    var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
-                    var results = query.Field("tags", val.MultipleCharacterWildcard()).Execute();
-
-                    items = this.BuildResourceList(results);
+                    var results = this.Index.GetSearcher().CreateQuery("content").Field("parentID", category.Id.ToString()).Execute();
+                    items = this.BuildResourceList(results).ToList();
+                    var categoryNode = this.Umbraco.Content(category.Id);
+                    highlightFilters = this.GetFiltersForCategory(categoryNode);
+                    showList = this.ShowListFirst(categoryNode);
+                    showCounties = this.ShowCounties(categoryNode);
                 }
                 else
                 {
-                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource tag not found.");
+                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Category not found.");
                 }
 
-                return this.Request.CreateResponse(HttpStatusCode.OK, items);
+                var resources = new CategoryResources
+                {
+                    Markers = items,
+                    HighlightFilters = highlightFilters,
+                    ShowListFirst = showList,
+                    ShowCounties = showCounties
+                };
+                
+                return this.Request.CreateResponse(HttpStatusCode.OK, resources);
             }
             catch (ApiNotFoundException e)
             {
@@ -215,81 +139,180 @@ namespace CovidSupport.Api.Controllers
             }
         }
 
-        [HttpGet]
-        public HttpResponseMessage GetByPopulation(int id)
-        {
-            try
-            {
-                IEnumerable<IResourceItemBase> items;
+        ////[HttpGet]
+        ////public HttpResponseMessage GetByRegion(string id)
+        ////{
+        ////    try
+        ////    {
+        ////        IEnumerable<IResourceItemBase> items;
 
-                var tagNode = this.Website.DescendantOfType("populationTypes").FirstChild(x => x.Id == id);
+        ////        var regionNode = int.TryParse(id, out int intId)
+        ////            ? this.Website.DescendantOfType("regions").FirstChild(x => x.Id == intId)
+        ////            : this.Website.DescendantOfType("regions").FirstChild(x => x.UrlSegment == id);
 
-                if (tagNode != null)
-                {
-                    var searcher = this.Index.GetSearcher();
+        ////        if (regionNode != null)
+        ////        {
+        ////            var searcher = this.Index.GetSearcher();
 
-                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
-                    query.QueryParser.AllowLeadingWildcard = true;
+        ////            var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+        ////            query.QueryParser.AllowLeadingWildcard = true;
 
-                    var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
-                    var results = query.Field("populationsServed", val.MultipleCharacterWildcard()).Execute();
+        ////            var val = "*" + regionNode.Key.ToString().Replace("-", string.Empty);
+        ////            var results = query.Field("region", val.MultipleCharacterWildcard()).Execute();
 
-                    items = this.BuildResourceList(results);
-                }
-                else
-                {
-                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Population type not found.");
-                }
+        ////            items = this.BuildResourceList(results);
+        ////        }
+        ////        else
+        ////        {
+        ////            return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Region not found.");
+        ////        }
 
-                return this.Request.CreateResponse(HttpStatusCode.OK, items);
-            }
-            catch (ApiNotFoundException e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-            }
-            catch (Exception e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
-            }
-        }
+        ////        return this.Request.CreateResponse(HttpStatusCode.OK, items);
+        ////    }
+        ////    catch (ApiNotFoundException e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+        ////    }
+        ////    catch (Exception e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+        ////    }
+        ////}
 
-        [HttpGet]
-        public HttpResponseMessage GetByLanguageServed(int id)
-        {
-            try
-            {
-                IEnumerable<IResourceItemBase> items;
+        ////[HttpGet]
+        ////public HttpResponseMessage GetByCategoryTag(int tagId)
+        ////{
+        ////    try
+        ////    {
+        ////        IEnumerable<IResourceItemBase> items;
 
-                var tagNode = this.Website.DescendantOfType("languages").FirstChild(x => x.Id == id);
+        ////        var tagNode = this.Website.DescendantOfType("resourceTags").FirstChild(x => x.Id == tagId);
 
-                if (tagNode != null)
-                {
-                    var searcher = this.Index.GetSearcher();
+        ////        if (tagNode != null)
+        ////        {
+        ////            var searcher = this.Index.GetSearcher();
 
-                    var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
-                    query.QueryParser.AllowLeadingWildcard = true;
+        ////            var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+        ////            query.QueryParser.AllowLeadingWildcard = true;
 
-                    var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
-                    var results = query.Field("populationsServed", val.MultipleCharacterWildcard()).Execute();
+        ////            var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
+        ////            var results = query.Field("tags", val.MultipleCharacterWildcard()).Execute();
 
-                    items = this.BuildResourceList(results);
-                }
-                else
-                {
-                    return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Language not found.");
-                }
+        ////            items = this.BuildResourceList(results);
+        ////        }
+        ////        else
+        ////        {
+        ////            return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Resource tag not found.");
+        ////        }
 
-                return this.Request.CreateResponse(HttpStatusCode.OK, items);
-            }
-            catch (ApiNotFoundException e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
-            }
-            catch (Exception e)
-            {
-                return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
-            }
-        }
+        ////        return this.Request.CreateResponse(HttpStatusCode.OK, items);
+        ////    }
+        ////    catch (ApiNotFoundException e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+        ////    }
+        ////    catch (Exception e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+        ////    }
+        ////}
+
+        ////[HttpGet]
+        ////public HttpResponseMessage GetByPopulation(int id)
+        ////{
+        ////    try
+        ////    {
+        ////        IEnumerable<IResourceItemBase> items;
+
+        ////        var tagNode = this.Website.DescendantOfType("populationTypes").FirstChild(x => x.Id == id);
+
+        ////        if (tagNode != null)
+        ////        {
+        ////            var searcher = this.Index.GetSearcher();
+
+        ////            var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+        ////            query.QueryParser.AllowLeadingWildcard = true;
+
+        ////            var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
+        ////            var results = query.Field("populationsServed", val.MultipleCharacterWildcard()).Execute();
+
+        ////            items = this.BuildResourceList(results);
+        ////        }
+        ////        else
+        ////        {
+        ////            return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Population type not found.");
+        ////        }
+
+        ////        return this.Request.CreateResponse(HttpStatusCode.OK, items);
+        ////    }
+        ////    catch (ApiNotFoundException e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+        ////    }
+        ////    catch (Exception e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+        ////    }
+        ////}
+
+        ////[HttpGet]
+        ////public HttpResponseMessage GetByLanguageServed(int id)
+        ////{
+        ////    try
+        ////    {
+        ////        IEnumerable<IResourceItemBase> items;
+
+        ////        var tagNode = this.Website.DescendantOfType("languages").FirstChild(x => x.Id == id);
+
+        ////        if (tagNode != null)
+        ////        {
+        ////            var searcher = this.Index.GetSearcher();
+
+        ////            var query = (LuceneSearchQueryBase)searcher.CreateQuery("content");
+        ////            query.QueryParser.AllowLeadingWildcard = true;
+
+        ////            var val = "*" + tagNode.Key.ToString().Replace("-", string.Empty);
+        ////            var results = query.Field("populationsServed", val.MultipleCharacterWildcard()).Execute();
+
+        ////            items = this.BuildResourceList(results);
+        ////        }
+        ////        else
+        ////        {
+        ////            return this.Request.CreateResponse(HttpStatusCode.BadRequest, "Language not found.");
+        ////        }
+
+        ////        return this.Request.CreateResponse(HttpStatusCode.OK, items);
+        ////    }
+        ////    catch (ApiNotFoundException e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+        ////    }
+        ////    catch (Exception e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message);
+        ////    }
+        ////}
+
+        ////[HttpGet]
+        ////public HttpResponseMessage GetAll()
+        ////{
+        ////    try
+        ////    {
+        ////        var results = this.Searcher.CreateQuery("content").All().Execute();
+
+        ////        var items = results.Select(this.BuildResourceListItem);
+
+        ////        return this.Request.CreateResponse(HttpStatusCode.Accepted, items, this.FormatterConfiguration);
+        ////    }
+        ////    catch (ApiNotFoundException e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.BadRequest, e.Message);
+        ////    }
+        ////    catch (Exception e)
+        ////    {
+        ////        return this.Request.CreateResponse(HttpStatusCode.InternalServerError, e.Message, this.FormatterConfiguration);
+        ////    }
+        ////}
 
         [HttpPut]
         public HttpResponseMessage Add(JToken putValue)
@@ -405,9 +428,20 @@ namespace CovidSupport.Api.Controllers
             var regionsNode = this.Website.DescendantOfType("regions");
 
             return regionsNode != null
-                ? regionsNode.Children.Select(x => new Region {Name = x.Name, Alias = x.UrlSegment})
+                ? regionsNode.Children.Select(x => new Region {Name = x.Name, Id = x.Value<string>("regionId")})
                 : new List<Region>();
-        }        
+        }
+
+        private IEnumerable<RegionPolygonData> GetRegionsPolygonData()
+        {
+            var regionsNode = this.Website.DescendantOfType("regions");
+
+            var regions = regionsNode != null
+                ? regionsNode.Children.Select(x => new RegionPolygonData { Name = x.Name, Id = x.Value<string>("regionId"), AreaJson = JsonConvert.DeserializeObject(x.Value<string>("areaJson")) })
+                : new List<RegionPolygonData>();
+
+            return regions.Where(x => x.AreaJson != null);
+        }
 
         private IResourceItem BuildResource(ISearchResult searchResult)
         {
@@ -447,12 +481,12 @@ namespace CovidSupport.Api.Controllers
             return ResourceFactoryProvider.GetResourceFactoryName(result.GetValues("__NodeTypeAlias").FirstOrDefault());
         }
 
-        private IEnumerable<HighlightFilter> GetFiltersForCategory(ResourceCategory category)
+        private string GetFiltersForCategory(IPublishedContent category)
         {
-            var categoryFiltersIds = this.Umbraco.Content(category.Id).Value<IEnumerable<IPublishedContent>>("highlightFilters")?.Select(x => x.Id) ?? new List<int>();
+            var categoryFiltersIds = category.Value<IEnumerable<IPublishedContent>>("highlightFilters")?.Select(x => x.Id) ?? new List<int>();
             var filters = this.GetFilters().Where(filter => categoryFiltersIds.Contains(filter.Id));
-            
-            return filters;
+
+            return string.Join(",", filters.Select(filter => filter.FilterAlias));
         }
 
         private IEnumerable<HighlightFilter> GetFilters()
@@ -464,9 +498,14 @@ namespace CovidSupport.Api.Controllers
                 : new List<HighlightFilter>();
         }
 
-        private bool ShowListOnly(ResourceCategory category)
+        private bool ShowListFirst(IPublishedContent category)
         {
-            return this.Umbraco.Content(category.Id).Value<bool>("showListOnly");
+            return category.Value<bool>("showListFirst");
+        }
+
+        private bool ShowCounties(IPublishedContent category)
+        {
+            return category.Value<bool>("showCounties");
         }
     }
 }

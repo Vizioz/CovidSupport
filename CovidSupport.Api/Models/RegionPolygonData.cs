@@ -1,11 +1,11 @@
 ﻿namespace CovidSupport.Api.Models
 {
-    public class Region
+    public class RegionPolygonData
     {
-        ////public int Id { get; set; }
-        
         public string Name { get; set; }
 
         public string Id { get; set; }
+
+        public object AreaJson { get; set; }
     }
 }

@@ -45,7 +45,7 @@ namespace CovidSupport.Api.Factories
             // Location
             var address = this.GetResultValue(searchResult, "address");
             var city = this.GetResultValue(searchResult, "city");
-            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var region = this.GetRegions(searchResult);
             var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
             var zip = this.GetResultValue(searchResult, "zip");
@@ -162,7 +162,7 @@ namespace CovidSupport.Api.Factories
             
             var address = this.GetResultValue(searchResult, "address");
             var city = this.GetResultValue(searchResult, "city");
-            var region = this.GetNodesName(this.GetResultValue(searchResult, "region"));
+            var region = this.GetRegions(searchResult);
             var stateList = this.GetResultValue(searchResult, "state");
             var state = stateList != null ? JsonConvert.DeserializeObject<string[]>(stateList) : new string[] { };
             var zip = this.GetResultValue(searchResult, "zip");
