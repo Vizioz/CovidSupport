@@ -22,6 +22,10 @@
 
         string ClassificationType { get; set; }
 
+        string Description { get; set; }
+
+        OpenInfo OpenInfo { get; set; }
+
         string[] Options { get; set; }
 
         bool IsOpen { get; set; }

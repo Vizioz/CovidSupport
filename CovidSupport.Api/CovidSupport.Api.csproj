@@ -304,6 +304,7 @@
     <Compile Include="Models\ApiNotFoundException.cs" />
     <Compile Include="Models\IResourceItemBase.cs" />
     <Compile Include="Models\LanguagePhone.cs" />
+    <Compile Include="Models\OpenInfo.cs" />
     <Compile Include="Models\OpeningTimes.cs" />
     <Compile Include="Models\Region.cs" />
     <Compile Include="Models\RegionPolygonData.cs" />

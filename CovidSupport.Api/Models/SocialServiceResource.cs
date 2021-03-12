@@ -13,6 +13,8 @@ namespace CovidSupport.Api.Models
 
         public string Description { get; set; }
 
+        public OpenInfo OpenInfo { get; set; }
+
         public string Address { get; set; }
 
         public string City { get; set; }

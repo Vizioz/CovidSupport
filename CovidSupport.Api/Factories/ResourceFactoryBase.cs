@@ -5,7 +5,6 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Core.Services;
@@ -225,6 +224,93 @@ namespace CovidSupport.Api.Factories
             }
 
             return icon;
+        }
+
+        protected OpenInfo OpenInfo(IEnumerable<OpeningTimes> openingTimes)
+        {
+            if (!openingTimes.Any())
+            {
+                return null;
+            }
+
+            var i = 0;
+            var timeUtc = DateTime.UtcNow;
+            TimeZoneInfo easternZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            var easternTime = TimeZoneInfo.ConvertTimeFromUtc(timeUtc, easternZone);
+            return this.NextOpeningTimes(openingTimes, easternTime, ref i);
+        }
+
+        private OpenInfo NextOpeningTimes(IEnumerable<OpeningTimes> openingTimes, DateTime now, ref int i)
+        {
+            if (!openingTimes.Any() || i > 7)
+            {
+                i = 0;
+                return null;
+            }
+
+            var day = openingTimes.FirstOrDefault(x =>
+                x.Day.Equals(now.DayOfWeek.ToString(), StringComparison.InvariantCultureIgnoreCase));
+
+            bool isOpen = false;
+            var openTime = day != null ? this.OpenTime(now, day, out isOpen) : null;
+
+            if (!string.IsNullOrEmpty(openTime))
+            {
+                return new OpenInfo
+                {
+                    IsOpenNow = i == 0 && isOpen,
+                    OpenTime = openTime,
+                    OpenDay = i == 0 ? "today" : i == 1 ? "tomorrow" : day.Day
+                };
+            }
+            else
+            {
+                i++;
+                var nextDay = now.AddDays(1).Date;
+                return this.NextOpeningTimes(openingTimes, nextDay, ref i);
+            }
+        }
+
+        private string OpenTime(DateTime now, OpeningTimes times, out bool isOpen)
+        {
+            isOpen = false;
+
+            if (times == null && !times.Hours.Any())
+            {
+                return null;
+            }
+
+            foreach (var hour in times.Hours)
+            {
+                if (!string.IsNullOrEmpty(hour.StartTime) && !string.IsNullOrEmpty(hour.EndTime))
+                {
+                    int startHour, startMinute;
+                    var splitStart = hour.StartTime.Split(':');
+                    int.TryParse(splitStart[0], out startHour);
+                    int.TryParse(splitStart[1], out startMinute);
+                    var start = new DateTime(now.Year, now.Month, now.Day, startHour, startMinute, 0);
+
+                    if (start > now)
+                    {
+                        isOpen = false;
+                        return hour.StartTime;
+                    }
+
+                    int endHour, endMinute;
+                    var splitEnd = hour.EndTime.Split(':');
+                    int.TryParse(splitEnd[0], out endHour);
+                    int.TryParse(splitEnd[1], out endMinute);
+                    var end = new DateTime(now.Year, now.Month, now.Day, endHour, endMinute, 0);
+
+                    if (end > now)
+                    {
+                        isOpen = true;
+                        return hour.StartTime;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private string GetResourceTypeIcon(ISearchResult searchResult)

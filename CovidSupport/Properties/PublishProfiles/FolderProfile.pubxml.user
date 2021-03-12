@@ -7,6 +7,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
   <PropertyGroup>
     <TimeStampOfAssociatedLegacyPublishXmlFile />
     <_PublishTargetUrl>C:\Development\ViziozProjects\CovidSupport\CovidSupport\bin\Release\Publish</_PublishTargetUrl>
+    <History>True|2021-03-11T11:15:09.3629814Z;</History>
   </PropertyGroup>
   <ItemGroup>
     <File Include="App_Plugins/CsvImport/csvimport.controllers.js">
@@ -208,28 +209,28 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>03/12/2020 10:17:22</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll">
-      <publishTime>02/18/2021 13:06:29</publishTime>
+      <publishTime>03/11/2021 11:15:02</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll.config">
       <publishTime>02/03/2021 17:20:08</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.pdb">
-      <publishTime>02/18/2021 13:06:29</publishTime>
+      <publishTime>03/11/2021 11:15:02</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.dll">
-      <publishTime>02/12/2021 16:04:22</publishTime>
+      <publishTime>03/02/2021 11:28:17</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.dll.config">
       <publishTime>09/01/2020 12:02:00</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.pdb">
-      <publishTime>02/12/2021 16:04:22</publishTime>
+      <publishTime>03/02/2021 11:28:17</publishTime>
     </File>
     <File Include="bin/CovidSupport.dll">
-      <publishTime>02/18/2021 13:06:30</publishTime>
+      <publishTime>03/11/2021 11:15:03</publishTime>
     </File>
     <File Include="bin/CovidSupport.pdb">
-      <publishTime>02/18/2021 13:06:30</publishTime>
+      <publishTime>03/11/2021 11:15:03</publishTime>
     </File>
     <File Include="bin/CSharpTest.Net.Collections.dll">
       <publishTime>09/06/2014 14:06:32</publishTime>
@@ -6274,7 +6275,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>02/18/2021 13:05:22</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>02/18/2021 13:06:31</publishTime>
+      <publishTime>03/03/2021 11:03:45</publishTime>
     </File>
   </ItemGroup>
 </Project>
