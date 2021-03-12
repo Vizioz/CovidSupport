@@ -42,6 +42,11 @@ namespace CovidSupport.Api.Factories
                 classificationType = this.GetResultValue(searchResult, "cuisine");
             }
 
+            if (!string.IsNullOrEmpty(providerAddLoc) && providerName.StartsWith(providerAddLoc, StringComparison.InvariantCultureIgnoreCase))
+            {
+                providerAddLoc = string.Empty;
+            }
+
             // Location
             var address = this.GetResultValue(searchResult, "address");
             var city = this.GetResultValue(searchResult, "city");
@@ -161,7 +166,12 @@ namespace CovidSupport.Api.Factories
             {
                 classificationType = this.GetResultValue(searchResult, "cuisine");
             }
-            
+
+            if (!string.IsNullOrEmpty(providerAddLoc) && providerName.StartsWith(providerAddLoc, StringComparison.InvariantCultureIgnoreCase))
+            {
+                providerAddLoc = string.Empty;
+            }
+
             var address = this.GetResultValue(searchResult, "address");
             var city = this.GetResultValue(searchResult, "city");
             var region = this.GetRegions(searchResult);

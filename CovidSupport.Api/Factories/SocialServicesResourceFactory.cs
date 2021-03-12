@@ -51,6 +51,11 @@ namespace CovidSupport.Api.Factories
                 }
             }
 
+            if (!string.IsNullOrEmpty(providerName) && serviceName.StartsWith(providerName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                providerName = string.Empty;
+            }
+
             // Access
             var eligibility = this.GetResultCultureValueWithFallback(searchResult, "eligibility");
             var access = this.GetResultCultureValueWithFallback(searchResult, "resourceAccessNotes");
@@ -216,6 +221,11 @@ namespace CovidSupport.Api.Factories
                     serviceName = providerName;
                     providerName = null;
                 }
+            }
+
+            if (!string.IsNullOrEmpty(providerName) && serviceName.StartsWith(providerName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                providerName = string.Empty;
             }
 
             var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
