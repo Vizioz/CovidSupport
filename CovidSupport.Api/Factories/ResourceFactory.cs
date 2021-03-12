@@ -54,6 +54,7 @@ namespace CovidSupport.Api.Factories
             // Opening Times
             var openingHours = this.GetOpeningTimes(searchResult).Where(x => x.Hours.Any());
             var specialHours = this.GetOpeningTimes(searchResult, "sp").Where(x => x.Hours.Any());
+            var openInfo = this.OpenInfo(openingHours);
 
             // Contact
             var contact = this.GetResultValue(searchResult, "contact");
@@ -107,7 +108,8 @@ namespace CovidSupport.Api.Factories
                 Instructions = instructions,
                 Offers = offers,
                 Notes = notes,
-                LastUpdate = updateDate
+                LastUpdate = updateDate,
+                OpenInfo = openInfo
             };
         }
 
@@ -169,7 +171,11 @@ namespace CovidSupport.Api.Factories
             var mapInfo = this.GetMapInfo(searchResult, "map");
             var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "status" && x.Key != "businessClosed" && x.Key != "sortOrder").Select(x => x.Key.ToLowerInvariant()).ToList();
 
-            if (this.GetOpeningTimes(searchResult, "sp").Any(x => x.Hours.Any()))
+            var openingHours = this.GetOpeningTimes(searchResult).Where(x => x.Hours.Any());
+            var specialHours = this.GetOpeningTimes(searchResult, "sp").Where(x => x.Hours.Any());
+            var openInfo = this.OpenInfo(openingHours);
+
+            if (specialHours.Any())
             {
                 options.Add("specialhours");
             }
@@ -190,7 +196,8 @@ namespace CovidSupport.Api.Factories
                 Lng = mapInfo?.LatLng?.Length > 1 ? mapInfo.LatLng[1] : (double?)null,
                 Options = options.ToArray(),
                 IsOpen = open,
-                Icon = icon
+                Icon = icon,
+                OpenInfo = openInfo
             };
         }
 

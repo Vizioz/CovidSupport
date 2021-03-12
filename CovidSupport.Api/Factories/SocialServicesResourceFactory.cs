@@ -3,8 +3,10 @@ using Examine;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.Linq;
+using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.Services;
 using Umbraco.Web;
@@ -91,6 +93,7 @@ namespace CovidSupport.Api.Factories
             var openingHours = this.GetOpeningTimes(searchResult);
             var holidays = this.GetResultCultureValueWithFallback(searchResult, "holidays");
             var specialHours = this.GetResultCultureValueWithFallback(searchResult, "specialHours");
+            var openInfo = this.OpenInfo(openingHours);
 
             // Populations Served
             var populations = this.GetNodesName(this.GetResultValue(searchResult, "populationsServed"));
@@ -155,7 +158,8 @@ namespace CovidSupport.Api.Factories
                 Options = options.ToArray(),
                 IsOpen = open,
                 Icon = icon,
-                LastUpdate = updateDate
+                LastUpdate = updateDate,
+                OpenInfo = openInfo
             };
         }
 
@@ -214,6 +218,7 @@ namespace CovidSupport.Api.Factories
                 }
             }
 
+            var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
             var region = this.GetRegions(searchResult);
             var address = this.GetResultValue(searchResult, "streetAddress");
@@ -224,8 +229,12 @@ namespace CovidSupport.Api.Factories
             var mapInfo = this.GetMapInfo(searchResult, "map");
             var tags = this.GetNodesName(searchResult.GetValues("tags").FirstOrDefault());
             var options = searchResult.Values.Where(x => x.Value == "1").Where(x => x.Key != "needsTranslation" && x.Key != "sortOrder").Select(x => x.Key.ToLowerInvariant()).ToList();
-            
-            if (!string.IsNullOrEmpty(this.GetResultCultureValueWithFallback(searchResult, "specialHours")))
+
+            var openingHours = this.GetOpeningTimes(searchResult);
+            var specialHours = this.GetResultCultureValueWithFallback(searchResult, "specialHours");
+            var openInfo = this.OpenInfo(openingHours);
+
+            if (!string.IsNullOrEmpty(specialHours))
             {
                 options.Add("seniorhours");
             }
@@ -244,6 +253,7 @@ namespace CovidSupport.Api.Factories
                 Region = region,
                 Category = category,
                 ClassificationType = classificationType,
+                Description = shortDescription,
                 Address = address,
                 City = city,
                 State = state.Length > 0 ? state[0] : null,
@@ -254,6 +264,7 @@ namespace CovidSupport.Api.Factories
                 Icon = icon,
                 Lat = mapInfo?.Lat,
                 Lng = mapInfo?.Lng,
+                OpenInfo = openInfo
             };
         }
 
