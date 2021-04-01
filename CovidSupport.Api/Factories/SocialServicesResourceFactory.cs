@@ -38,6 +38,7 @@ namespace CovidSupport.Api.Factories
             var shortDescription = this.GetResultCultureValueWithFallback(searchResult, "shortDescription");
             var longDescription = this.GetResultCultureValueWithFallback(searchResult, "longDescription");
             var classificationType = this.GetSingleNodeName(this.GetResultValue(searchResult, "classificationType"));
+            var certifications = this.GetResultValue(searchResult, "certifications");
 
             if (string.IsNullOrEmpty(serviceName))
             {
@@ -66,7 +67,9 @@ namespace CovidSupport.Api.Factories
             var lowCost = this.GetResultBooleanValue(searchResult, "lowCost");
             var acceptsMedicare = this.GetResultBooleanValue(searchResult, "lowCost");
             var acceptsUninsuredPatients = this.GetResultBooleanValue(searchResult, "lowCost");
-            var acceptsMedicaid = this.GetResultBooleanValue(searchResult, "lowCost");
+            var acceptsMedicaid = this.GetResultBooleanValue(searchResult, "lowCost"); 
+            var insurancePolicy = this.GetResultCultureValueWithFallback(searchResult, "insurancePolicy");
+            var fees = this.GetResultCultureValueWithFallback(searchResult, "fees");
 
             // Contact
             var webLink = this.GetResultValue(searchResult, "website");
@@ -93,6 +96,7 @@ namespace CovidSupport.Api.Factories
             var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
             var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList) : new string[] { };
             var statusVal = status.Length > 0 ? status[0] : string.Empty;
+            var statusDescription = this.GetResultCultureValueWithFallback(searchResult, "fees");
             var open = !string.Equals(statusVal, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase) 
                 && !string.Equals(statusVal, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
             var openingHours = this.GetOpeningTimes(searchResult);
@@ -164,7 +168,11 @@ namespace CovidSupport.Api.Factories
                 IsOpen = open,
                 Icon = icon,
                 LastUpdate = updateDate,
-                OpenInfo = openInfo
+                OpenInfo = openInfo,
+                Certifications = certifications,
+                InsurancePolicy = insurancePolicy,
+                Fees = fees,
+                StatusDescription = statusDescription
             };
         }
 

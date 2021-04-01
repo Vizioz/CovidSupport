@@ -122,7 +122,7 @@
                 checkIfDone();
 
             }, function (error) {
-                vm.logs.push({ Success: false, Message: data.Page.Variants[0].Language.Value + " - " + error.data.Message });
+                vm.logs.push({ Success: false, Message: error.data.Message });
                 vm.totalItemsFailed++;
                 checkIfDone();
             }, );
