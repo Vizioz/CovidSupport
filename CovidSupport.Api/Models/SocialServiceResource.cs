@@ -96,5 +96,13 @@ namespace CovidSupport.Api.Models
         public IEnumerable<string> LanguagesSupported { get; set; }
 
         public IEnumerable<string> Tags { get; set; }
+
+        public string Certifications { get; set; }
+        
+        public string InsurancePolicy { get; set; }
+
+        public string Fees { get; set; }
+
+        public string StatusDescription { get; set; }
     }
 }
