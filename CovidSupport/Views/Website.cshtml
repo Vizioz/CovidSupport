@@ -1,51 +1,82 @@
 ﻿@inherits Umbraco.Web.Mvc.UmbracoViewPage<ContentModels.Website>
 @using ContentModels = Umbraco.Web.PublishedModels;
 @{
-	Layout = null;
+    Layout = null;
+    var assets = $"/assets/{Model.UrlSegment}";
+    var url = Model.Url(mode: UrlMode.Absolute);
 }
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    @*<title></title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css"
-          integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ=="
-          crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"
-            integrity="sha512-gZwIG9x3wUXg2hdXF6+rVkLF/0Vi9U8D2Ntg4Ga5I5BZpVkVxlJWbSQtXPSiUTtC0TjtGOmxa1AJPuV0CPthew=="
-            crossorigin=""></script>
-    
-    <style>
-        #mapid { height: 180px; }
-    </style>*@
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+    <link rel="icon" href="@assets/favicon.ico">
+    <meta name="apple-mobile-web-app-title" content="@Model.SEotitle">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon" sizes="57x57" href="@assets/images/ico_57.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="@assets/images/ico_76.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="@assets/images/ico_120.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="@assets/images/ico_152.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="@assets/images/ico_167.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="@assets/images/ico_180.png">
+    <link rel="apple-touch-icon" href="@assets/images/ico_76.png">
+    <link rel="icon" sizes="192x192" type="image/png" href="@assets/images/ico_192.png">
+    <link rel="icon" sizes="128x128" type="image/png" href="@assets/images/ico_128.png">
+    <meta property="fb:app_id" content="100447554971865">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="@url">
+    <meta property="og:image" content="@(url)images/Share-Twitter.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="670">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:secure_url" content="@(url)images/Share-Twitter.png">
+    <meta property="og:title" content="@Model.SEotitle">
+    <meta property="og:description" content="@Model.SEodescription">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="es_US">
+    <meta property="og:site_name" content="@Model.Title">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="@(url)images/Share-Twitter.png">
+    <meta name="twitter:image:alt" content="@Model.SEotitle">
+    <meta name="twitter:image:width" content="1200">
+    <meta name="twitter:image:height" content="670">
+    <meta name="twitter:title" content="@Model.SEotitle">
+    <meta name="twitter:description" content="@Model.SEodescription">
+    <meta name="twitter:site" content="@("@nccovidsupport")">
+    <meta name="twitter:creator" content="@("@nccovidsupport")">
+    <meta name="twitter:domain" content="@(url)">
+    <meta name="twitter:url" content="@(url)">
+    <meta name="application-name" content="@Model.SEotitle">
+    <meta name="msapplication-config" content="@assets/browserconfig.xml?a=2">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;600&display=swap" rel="stylesheet">
+    <title>@Model.SEotitle</title>
+    <meta name="keywords" content="@Model.SEokeywords">
+    <meta name="description" content="@Model.SEodescription">
+    <script src="https://kit.fontawesome.com/1487031944.js" crossorigin="anonymous"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-162758783-1"></script>
+    <script>
+    window.dataLayer = window.dataLayer || []
+
+        function gtag() {
+            dataLayer.push(arguments)
+        }
+
+        gtag('js', new Date())
+        gtag('config', 'UA-162758783-1')</script>
+    <link href="@assets/js/chunk-2d0e1c1d.0d1a3c0d.js" rel="prefetch">
+    <link href="@assets/js/chunk-2d0f0fb5.97a52ac2.js" rel="prefetch">
+    <link href="@assets/css/app.6eebbdda.css" rel="preload" as="style">
+    <link href="@assets/css/chunk-vendors.692ebd08.css" rel="preload" as="style">
+    <link href="@assets/js/app.8264a1f4.js" rel="preload" as="script">
+    <link href="@assets/js/chunk-vendors.b9f1a693.js" rel="preload" as="script">
+    <link href="@assets/css/chunk-vendors.692ebd08.css" rel="stylesheet">
+    <link href="@assets/css/app.6eebbdda.css" rel="stylesheet">
 </head>
 <body>
-    @*<div></div>
-    <div id="mapid"></div>
-    <script type="text/javascript">
-        var mymap = L.map('mapid').setView([35.929903, -79.026481], 13);
-        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 18,
-            id: 'mapbox/streets-v11',
-            tileSize: 512,
-            zoomOffset: -1,
-            accessToken: 'pk.eyJ1IjoibWlndWVsbG9wZXo2IiwiYSI6ImNrOXd3a3NhZDA5eGkzZ284dXl5ZnI3NXUifQ.HehSLVuVEqpaa8ukk44NwA'
-        }).addTo(mymap);
-        var marker = L.marker([35.929903, -79.026481], { draggable: true, autoPan: true }).addTo(mymap);
-        marker.on("dragend", function (r) { console.log("drag end"); console.log(r.target._latlng); });    
-    </script>*@
-    <script>
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function () {
-            if (this.readyState == 4 && this.status == 200) {
-                console.log(this.response);
-            } else {
-                console.log(this)
-            }
-        };
-        xhttp.open("GET", "https://nccovid.vizioz.com/api/v1/resource/settings");
-        xhttp.setRequestHeader("Content-Type", "application/json");
-        xhttp.send(JSON.stringify({ id: 3, val: "noval" }));
-    </script>
+    <noscript><strong>We're sorry but this website doesn't work properly without JavaScript enabled. Please enable it to continue.</strong></noscript><div id="app"></div>
+    <script src="@assets/js/chunk-vendors.b9f1a693.js"></script>
+    <script src="@assets/js/app.8264a1f4.js"></script>
 </body>
 </html>

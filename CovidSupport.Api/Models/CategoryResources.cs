@@ -11,5 +11,7 @@ namespace CovidSupport.Api.Models
         public bool ShowListFirst { get; set; }
 
         public bool ShowCounties { get; set; }
+
+        public bool ShowTooltips { get; set; }
     }
 }

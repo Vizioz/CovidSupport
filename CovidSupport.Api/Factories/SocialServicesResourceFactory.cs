@@ -96,7 +96,7 @@ namespace CovidSupport.Api.Factories
             var statusList = this.GetResultCultureValueWithFallback(searchResult, "status");
             var status = statusList != null ? JsonConvert.DeserializeObject<string[]>(statusList) : new string[] { };
             var statusVal = status.Length > 0 ? status[0] : string.Empty;
-            var statusDescription = this.GetResultCultureValueWithFallback(searchResult, "fees");
+            var statusDescription = this.GetResultCultureValueWithFallback(searchResult, "statusDescription");
             var open = !string.Equals(statusVal, "Temporarily Closed", StringComparison.InvariantCultureIgnoreCase) 
                 && !string.Equals(statusVal, "Permanently Closed", StringComparison.InvariantCultureIgnoreCase);
             var openingHours = this.GetOpeningTimes(searchResult);
