@@ -7,29 +7,29 @@ by editing this MSBuild file. In order to learn more about this please visit htt
   <PropertyGroup>
     <TimeStampOfAssociatedLegacyPublishXmlFile />
     <_PublishTargetUrl>C:\Development\ViziozProjects\CovidSupport\CovidSupport\bin\Release\Publish</_PublishTargetUrl>
-    <History>True|2021-03-11T11:15:09.3629814Z;</History>
+    <History>True|2021-04-16T15:06:38.0671307Z;True|2021-04-16T15:42:35.4086038+01:00;True|2021-04-06T16:07:49.9395225+01:00;True|2021-03-12T15:33:07.8134199+00:00;True|2021-03-11T11:15:09.3629814+00:00;</History>
   </PropertyGroup>
   <ItemGroup>
     <File Include="App_Plugins/CsvImport/csvimport.controllers.js">
-      <publishTime>09/01/2020 12:02:01</publishTime>
+      <publishTime>04/01/2021 15:18:24</publishTime>
     </File>
     <File Include="App_Plugins/CsvImport/csvimport.html">
-      <publishTime>08/13/2020 09:19:44</publishTime>
+      <publishTime>04/01/2021 15:18:24</publishTime>
     </File>
     <File Include="App_Plugins/CsvImport/csvimport.min.css">
-      <publishTime>08/13/2020 09:19:44</publishTime>
+      <publishTime>04/01/2021 15:18:24</publishTime>
     </File>
     <File Include="App_Plugins/CsvImport/csvimport.resources.js">
-      <publishTime>09/01/2020 12:02:01</publishTime>
+      <publishTime>04/01/2021 15:18:24</publishTime>
     </File>
     <File Include="App_Plugins/CsvImport/lang/en-US.xml">
-      <publishTime>08/13/2020 09:19:44</publishTime>
+      <publishTime>04/01/2021 15:18:24</publishTime>
     </File>
     <File Include="App_Plugins/CsvImport/lib/papaparse.min.js">
-      <publishTime>09/01/2020 12:02:01</publishTime>
+      <publishTime>04/01/2021 15:18:24</publishTime>
     </File>
     <File Include="App_Plugins/CsvImport/package.manifest">
-      <publishTime>09/01/2020 12:02:01</publishTime>
+      <publishTime>04/01/2021 15:18:24</publishTime>
     </File>
     <File Include="App_Plugins/CustomDatePicker/customdatepicker.controller.js">
       <publishTime>09/01/2020 12:02:01</publishTime>
@@ -209,28 +209,28 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>03/12/2020 10:17:22</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll">
-      <publishTime>03/11/2021 11:15:02</publishTime>
+      <publishTime>04/16/2021 16:06:31</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.dll.config">
       <publishTime>02/03/2021 17:20:08</publishTime>
     </File>
     <File Include="bin/CovidSupport.Api.pdb">
-      <publishTime>03/11/2021 11:15:02</publishTime>
+      <publishTime>04/16/2021 16:06:31</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.dll">
-      <publishTime>03/02/2021 11:28:17</publishTime>
+      <publishTime>04/06/2021 16:07:43</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.dll.config">
       <publishTime>09/01/2020 12:02:00</publishTime>
     </File>
     <File Include="bin/CovidSupport.Core.pdb">
-      <publishTime>03/02/2021 11:28:17</publishTime>
+      <publishTime>04/06/2021 16:07:43</publishTime>
     </File>
     <File Include="bin/CovidSupport.dll">
-      <publishTime>03/11/2021 11:15:03</publishTime>
+      <publishTime>04/16/2021 16:06:31</publishTime>
     </File>
     <File Include="bin/CovidSupport.pdb">
-      <publishTime>03/11/2021 11:15:03</publishTime>
+      <publishTime>04/16/2021 16:06:31</publishTime>
     </File>
     <File Include="bin/CSharpTest.Net.Collections.dll">
       <publishTime>09/06/2014 14:06:32</publishTime>
@@ -650,7 +650,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/13/2020 09:19:45</publishTime>
     </File>
     <File Include="config/ClientDependency.config">
-      <publishTime>09/01/2020 12:02:01</publishTime>
+      <publishTime>04/01/2021 12:23:47</publishTime>
     </File>
     <File Include="config/grid.editors.config.js">
       <publishTime>09/01/2020 12:02:01</publishTime>
@@ -6272,10 +6272,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>09/01/2020 12:02:17</publishTime>
     </File>
     <File Include="Views/Website.cshtml">
-      <publishTime>02/18/2021 13:05:22</publishTime>
+      <publishTime>04/16/2021 16:05:24</publishTime>
     </File>
     <File Include="Web.config">
-      <publishTime>03/03/2021 11:03:45</publishTime>
+      <publishTime>04/16/2021 15:42:29</publishTime>
     </File>
   </ItemGroup>
 </Project>

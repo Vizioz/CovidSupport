@@ -102,6 +102,7 @@ namespace CovidSupport.Api.Controllers
                 string highlightFilters;
                 bool showList;
                 bool showCounties;
+                bool showTooltips;
                 var categories = this.GetCategories();
                 var category = this.FindInCategoryTree(categories, id);
 
@@ -113,6 +114,7 @@ namespace CovidSupport.Api.Controllers
                     highlightFilters = this.GetFiltersForCategory(categoryNode);
                     showList = this.ShowListFirst(categoryNode);
                     showCounties = this.ShowCounties(categoryNode);
+                    showTooltips = this.ShowTooltips(categoryNode);
                 }
                 else
                 {
@@ -124,7 +126,8 @@ namespace CovidSupport.Api.Controllers
                     Markers = items,
                     HighlightFilters = highlightFilters,
                     ShowListFirst = showList,
-                    ShowCounties = showCounties
+                    ShowCounties = showCounties,
+                    ShowTooltips = showTooltips
                 };
                 
                 return this.Request.CreateResponse(HttpStatusCode.OK, resources);
@@ -506,6 +509,11 @@ namespace CovidSupport.Api.Controllers
         private bool ShowCounties(IPublishedContent category)
         {
             return category.Value<bool>("showCounties");
+        }
+
+        private bool ShowTooltips(IPublishedContent category)
+        {
+            return category.Value<bool>("showTooltips");
         }
     }
 }

@@ -324,3 +324,4 @@ C:\Development\ViziozProjects\CovidSupport\CovidSupport.Api\obj\Debug\CovidSuppo
 C:\Development\ViziozProjects\CovidSupport\CovidSupport.Api\obj\Debug\CovidSupport.Api.csproj.CopyComplete
 C:\Development\ViziozProjects\CovidSupport\CovidSupport.Api\obj\Debug\CovidSupport.Api.dll
 C:\Development\ViziozProjects\CovidSupport\CovidSupport.Api\obj\Debug\CovidSupport.Api.pdb
+C:\Development\ViziozProjects\CovidSupport\CovidSupport.Api\obj\Debug\CovidSupport.Api.csprojAssemblyReference.cache
